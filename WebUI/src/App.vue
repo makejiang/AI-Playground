@@ -128,6 +128,9 @@
         {{ languages.TAB_ANSWER }}
       </button>
       <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
+        China ISV Apps
+      </button>
+      <button class="tab" :class="{ active: activeTabIdx == 4 }" @click="switchTab(4)">
         {{ languages.TAB_LEARN_MORE }}
       </button>
       <span class="main-tab-glider tab absolute" :class="{ [`pos-${activeTabIdx}`]: true }"></span>
@@ -150,7 +153,10 @@
         @show-download-model-confirm="showDownloadModelConfirm"
         @show-model-request="showModelRequest"
       ></answer>
-      <learn-more v-show="activeTabIdx == 3"></learn-more>
+      <oem-bundle-a
+        v-show="activeTabIdx == 3"
+      ></oem-bundle-a>
+      <learn-more v-show="activeTabIdx == 4"></learn-more>
       <app-settings
         v-show="showSetting"
         @close="hideAppSettings"
@@ -231,11 +237,13 @@
 </template>
 
 <script setup lang="ts">
+import { emitter } from '@/assets/js/util'
 import LoadingBar from './components/LoadingBar.vue'
 import InstallationManagement from './components/InstallationManagement.vue'
 import Create from './views/Create.vue'
 import Enhance from './views/Enhance.vue'
 import Answer from './views/Answer.vue'
+import OemBundleA from './views/OemBundleA.vue'
 import LearnMore from './views/LearnMore.vue'
 import AppSettings from './views/AppSettings.vue'
 import './assets/css/index.css'
@@ -305,6 +313,7 @@ async function setInitalLoadingState() {
     if (result.allServicesStarted) {
       await globalSetup.initSetup()
       globalSetup.loadingState = 'running'
+      emitter.emit('backendReady')
       return
     }
   }

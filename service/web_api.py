@@ -43,6 +43,8 @@ from model_downloader import HFPlaygroundDownloader
 from psutil._common import bytes2human
 import traceback
 
+import mgr_app as appmgr
+
 import logging
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -456,6 +458,85 @@ def cache_mask_image():
     mask_image.save(file_path)
     utils.cache_file(file_path, os.path.getsize(file_path))
     return file_path
+
+
+##################################################################
+# following api for app manager
+@app.post("/api/app/status")
+def get_app_status():
+    app = request.get_json().get("app")
+    print("app: ", app)
+
+    # check if it is running
+    processname = app.get("processname")
+    if appmgr.appisrunning(processname):
+        return jsonify({"status": "running"})
+
+    installedname = app.get("installedname")
+    if appmgr.appisinstalled(installedname):
+        return jsonify({"status": "installed"})
+        
+    return jsonify({"status": "not-installed"})
+
+
+@app.post("/api/app/install")
+def install_app():
+    app = request.get_json().get("app")
+    print("app: ", app)
+
+    appname = app.get("name")
+    installer = app.get("installer")
+
+    ret = {"result": False, "message": "Installation failed"}
+    if appmgr.installapp(installer):
+        ret = {"result": True}
+        
+    return jsonify(ret)
+
+@app.post("/api/app/uninstall")
+def uninstall_app():
+    app = request.get_json().get("app")
+    print("app: ", app)
+
+    appname = app.get("name")
+    installedname = app.get("installedname")
+    uninstallProcessName = app.get("uninstallProcessName")
+
+    ret = {"result": False, "message": "Uninstallation failed"}
+    if appmgr.uninstallapp(installedname, uninstallProcessName):
+        ret = {"result": True}
+        
+    return jsonify(ret)
+
+
+@app.post("/api/app/run")
+def run_app():
+    app = request.get_json().get("app")
+    print("app: ", app)
+
+    appname = app.get("name")
+    processname = app.get("processname")
+    installedname = app.get("installedname")
+
+    ret = {"result": False, "message": "Run failed"}
+    if appmgr.runapp(appname, processname, installedname):
+        ret = {"result": True}
+        
+    return jsonify(ret)
+
+
+@app.post("/api/app/close")
+def close_app():
+    app = request.get_json().get("app")
+    print("app: ", app)
+
+    processname = app.get("processname")
+
+    ret = {"result": False, "message": "Run failed"}
+    if appmgr.closeapp(processname):
+        ret = {"result": True}
+        
+    return jsonify(ret)
 
 
 if __name__ == "__main__":

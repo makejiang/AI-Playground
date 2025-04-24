@@ -21,3 +21,4 @@ pypdf==4.2.0
 unstructured==0.16.16
 setuptools>=75.2.0
 huggingface_hub==0.25.2
+pywin32==310

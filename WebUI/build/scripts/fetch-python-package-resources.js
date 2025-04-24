@@ -39,21 +39,26 @@ function fetchFile(url) {
     process.env.https_proxy ||
     process.env.HTTP_PROXY ||
     process.env.http_proxy
-  const options = proxy ? { agent: new HttpsProxyAgent(proxy) } : {}
-  https
-    .get(url, options, (response) => {
-      const filePath = path.join(targetDir, getBaseFileName(url))
-      const file = fs.createWriteStream(filePath)
-      response.pipe(file)
+    const options = proxy ? { agent: new HttpsProxyAgent(proxy) } : {}
+    const httpsOptions = {
+        ...options,
+        rejectUnauthorized: false // Accept self-signed certificates
+    }
 
-      file.on('finish', () => {
-        file.close()
-        console.log(`Downloaded ${filePath} successfully!`)
-      })
-    })
-    .on('error', (err) => {
-      console.error(`Error downloading ${url}: ${err}`)
-    })
+    https
+        .get(url, httpsOptions, (response) => {
+            const filePath = path.join(targetDir, getBaseFileName(url))
+            const file = fs.createWriteStream(filePath)
+            response.pipe(file)
+
+            file.on('finish', () => {
+                file.close()
+                console.log(`Downloaded ${filePath} successfully!`)
+            })
+        })
+        .on('error', (err) => {
+            console.error(`Error downloading ${url}: ${err}`)
+        })
 }
 
 function getBaseFileName(url) {
