@@ -768,7 +768,7 @@ export const useImageGeneration = defineStore(
         (checkModelExistsResult) => !checkModelExistsResult.already_loaded,
       )
       for (const item of modelsToBeLoaded) {
-        if (!(await models.checkIfHuggingFaceUrlExists(item.repo_id))) {
+        if (!(await models.checkIfModelUrlExists(item.repo_id, models.modelSource))) {
           toast.error(`declared model ${item.repo_id} does not exist. Aborting Generation.`)
           return []
         }

@@ -1,7 +1,34 @@
 <template>
   <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
-    <h2 class="text-center font-bold">{{ languages.SETTINGS_MODEL_HUGGINGFACE }}</h2>
     <div class="flex flex-col gap-3">
+      <p>{{ languages.SETTINGS_MODEL_PREF_SOURCE }}</p>
+      <div class="flex items-center gap-2">
+        <drop-selector
+          :array="modelSources"
+          @change="
+            (value, _) => {
+              models.modelSource = value
+              console.log('Switching to :', models.modelSource)
+            }
+          "
+        >
+          <template #selected>
+            <div class="flex gap-2 items-center">
+              <span class="rounded-full bg-green-500 w-2 h-2"></span>
+              <span>{{ models.modelSource }}</span>
+            </div>
+          </template>
+          <template #list="slotItem">
+            <div class="flex gap-2 items-center">
+              <span class="rounded-full bg-green-500 w-2 h-2"></span>
+              <span>{{ slotItem.item }}</span>
+            </div>
+          </template>
+        </drop-selector>
+      </div>
+    </div>
+    <h2 class="text-center font-bold" v-show="models.modelSource === 'huggingface'">{{ languages.SETTINGS_MODEL_HUGGINGFACE }}</h2>
+    <div class="flex flex-col gap-3" v-show="models.modelSource === 'huggingface'">
       <p>{{ languages.SETTINGS_MODEL_HUGGINGFACE_API_TOKEN }}</p>
       <div class="flex flex-col items-start gap-1">
         <Input
@@ -14,6 +41,23 @@
           :class="{ 'opacity-0': !(models.hfToken && !models.hfTokenIsValid) }"
         >
           {{ languages.SETTINGS_MODEL_HUGGINGFACE_INVALID_TOKEN_TEXT }}
+        </div>
+      </div>
+    </div>
+    <h2 class="text-center font-bold" v-show="models.modelSource === 'modelscope'">{{ languages.SETTINGS_MODEL_MODELSCOPE }}</h2>
+    <div class="flex flex-col gap-3" v-show="models.modelSource === 'modelscope'">
+      <p>{{ languages.SETTINGS_MODEL_MODELSCOPE_API_TOKEN }}</p>
+      <div class="flex flex-col items-start gap-1">
+        <Input
+          type="password"
+          v-model="models.msToken"
+          :class="{ 'border-red-500': models.msToken && !models.msTokenIsValid }"
+        />
+        <div
+          class="text-xs text-red-500 select-none"
+          :class="{ 'opacity-0': !(models.msToken && !models.msTokenIsValid) }"
+        >
+          {{ languages.SETTINGS_MODEL_MODELSCOPE_INVALID_TOKEN_TEXT }}
         </div>
       </div>
     </div>
@@ -331,6 +375,7 @@ import * as toast from '@/assets/js/toast'
 import * as Const from '@/assets/js/const'
 import { useGlobalSetup } from '@/assets/js/store/globalSetup.ts'
 import { ModelPaths } from '@/assets/js/store/models'
+import { log } from 'console'
 
 const i18n = useI18N()
 const models = useModels()
@@ -341,6 +386,8 @@ const presetModelChange = ref(false)
 
 const paths = reactive<ModelPaths>(Object.assign({}, toRaw(globalSetup.paths)))
 const pathsChange = ref(false)
+
+const modelSources = ['huggingface', 'modelscope']
 
 const emits = defineEmits<{
   (

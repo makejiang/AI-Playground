@@ -16,6 +16,7 @@ class DownloadModelData:
 @marshmallow_dataclass.dataclass
 class DownloadModelRequestBody:
     data : List[DownloadModelData]
+    source : str
 
 @marshmallow_dataclass.dataclass
 class ComfyUICustomNodesGithubRepoId:

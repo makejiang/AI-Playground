@@ -8,6 +8,8 @@ from file_downloader import FileDownloader
 from model_downloader import NotEnoughDiskSpaceException, DownloadException
 from psutil._common import bytes2human
 from model_downloader import HFPlaygroundDownloader
+from model_downloader_ms import MSPlaygroundDownloader
+
 import realesrgan
 import aipg_utils as utils
 from web_request_bodies import DownloadModelData
@@ -18,11 +20,11 @@ class Model_Downloader_Adapter:
     finish: bool
     singal: threading.Event
     file_downloader: FileDownloader
-    hf_downloader: HFPlaygroundDownloader
+    model_downloader: object
     has_error: bool
     user_stop: bool
 
-    def __init__(self, hf_token=None):
+    def __init__(self, model_source, token=None):
         self.msg_queue = Queue(-1)
         self.finish = False
         self.user_stop = False
@@ -34,9 +36,9 @@ class Model_Downloader_Adapter:
         self.file_downloader.on_download_completed = (
             self.download_model_completed_callback
         )
-        self.hf_downloader = HFPlaygroundDownloader(hf_token)
-        self.hf_downloader.on_download_progress = self.download_model_progress_callback
-        self.hf_downloader.on_download_completed = (
+        self.model_downloader = MSPlaygroundDownloader(token) if model_source=='modelscope' else HFPlaygroundDownloader(token)
+        self.model_downloader.on_download_progress = self.download_model_progress_callback
+        self.model_downloader.on_download_completed = (
             self.download_model_completed_callback
         )
 
@@ -127,7 +129,7 @@ class Model_Downloader_Adapter:
                         ),
                     )
                 else:
-                    self.hf_downloader.download(item.repo_id, item.type, item.backend)
+                    self.model_downloader.download(item.repo_id, item.type, item.backend)
             self.put_msg({"type": "allComplete"})
             self.finish = True
         except Exception as ex:
@@ -137,8 +139,8 @@ class Model_Downloader_Adapter:
         self.user_stop = True
         if not self.file_downloader.completed:
             self.file_downloader.stop_download()
-        if not self.hf_downloader.completed:
-            self.hf_downloader.stop_download()
+        if not self.model_downloader.completed:
+            self.model_downloader.stop_download()
 
     def generator(self):
         while True:

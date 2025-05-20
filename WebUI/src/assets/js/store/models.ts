@@ -84,7 +84,9 @@ const predefinedModels: Omit<Model, 'downloaded'>[] = [
 export const useModels = defineStore(
   'models',
   () => {
+    const modelSource = ref<string>('huggingface')
     const hfToken = ref<string | undefined>(undefined)
+    const msToken = ref<string | undefined>(undefined)
     const models = ref<Model[]>([])
     const backendServices = useBackendServices()
 
@@ -154,8 +156,8 @@ export const useModels = defineStore(
       return aiBackendUrl
     }
 
-    async function checkIfHuggingFaceUrlExists(repo_id: string) {
-      const response = await fetch(`${aipgBackendUrl()}/api/checkHFRepoExists?repo_id=${repo_id}`)
+    async function checkIfModelUrlExists(repo_id: string, model_source: string) {
+      const response = await fetch(`${aipgBackendUrl()}/api/checkRepoExists?repo_id=${repo_id}&source=${model_source}`, )
       const data = await response.json()
       return data.exists
     }
@@ -163,11 +165,12 @@ export const useModels = defineStore(
     async function checkModelAlreadyLoaded(params: CheckModelAlreadyLoadedParameters[]) {
       const response = await fetch(`${aipgBackendUrl()}/api/checkModelAlreadyLoaded`, {
         method: 'POST',
-        body: JSON.stringify({ data: params }),
+        body: JSON.stringify({ data: params, source: modelSource.value }),
         headers: {
           'Content-Type': 'application/json',
         },
       })
+
       const parsedResponse = (await response.json()) as ApiResponse & {
         data: CheckModelAlreadyLoadedResult[]
       }
@@ -178,19 +181,22 @@ export const useModels = defineStore(
 
     return {
       models,
+      modelSource,
       hfToken,
       hfTokenIsValid: computed(() => hfToken.value?.startsWith('hf_')),
+      msToken,
+      msTokenIsValid: computed(() => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msToken.value || '')),
       downloadList,
       addModel,
       refreshModels,
       download,
-      checkIfHuggingFaceUrlExists,
+      checkIfModelUrlExists,
       checkModelAlreadyLoaded,
     }
   },
   {
     persist: {
-      pick: ['hfToken'],
+      pick: ['hfToken', 'msToken', 'modelSource'],
     },
   },
 )

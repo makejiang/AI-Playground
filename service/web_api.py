@@ -40,6 +40,8 @@ import aipg_utils as utils
 import rag
 import service_config
 from model_downloader import HFPlaygroundDownloader
+from model_downloader_ms import MSPlaygroundDownloader
+
 from psutil._common import bytes2human
 import traceback
 from ipex_embedding import IpexEmbeddingModel
@@ -191,10 +193,14 @@ def check_model_already_loaded(download_request_data: DownloadModelRequestBody):
 
 
 
-@app.get("/api/checkHFRepoExists")
+@app.get("/api/checkRepoExists")
 def check_if_huggingface_repo_exists():
     repo_id = request.args.get('repo_id')
-    downloader = HFPlaygroundDownloader()
+    source = request.args.get('source')
+    if source == "modelscope":
+        downloader = MSPlaygroundDownloader()
+    else:
+        downloader = HFPlaygroundDownloader()
     exists = downloader.hf_url_exists(repo_id)
     return jsonify(
         {
@@ -202,10 +208,17 @@ def check_if_huggingface_repo_exists():
         }
     )
 
+
 @app.get("/api/isLLM")
 def is_llm():
     repo_id = request.args.get('repo_id')
-    downloader = HFPlaygroundDownloader()
+    source = request.args.get('source')
+
+    if source == "modelscope":
+        downloader = MSPlaygroundDownloader()
+    else:
+        downloader = HFPlaygroundDownloader()
+        
     try:
         model_type_hf = downloader.probe_type(repo_id)
     except Exception:
@@ -222,10 +235,14 @@ lock = threading.Lock()
 
 @app.post("/api/isModelGated")
 def is_model_gated():
-    list = request.get_json()
-    downloader = HFPlaygroundDownloader()
-    gated = {item["repo_id"]: downloader.is_gated(item["repo_id"]) for item in list}
+    list, source = request.get_json()
 
+    if source == "modelscope":
+        downloader = MSPlaygroundDownloader()
+    else:
+        downloader = HFPlaygroundDownloader()
+
+    gated = {item["repo_id"]: downloader.is_gated(item["repo_id"]) for item in list}
     return jsonify(
         {
             "code": 0,
@@ -236,8 +253,12 @@ def is_model_gated():
 
 @app.route("/api/isAccessGranted", methods=["POST"])
 def is_access_granted():
-    list, hf_token = request.get_json()
-    downloader = HFPlaygroundDownloader(hf_token)
+    list, token, source = request.get_json()
+    if source == "modelscope":
+        downloader = MSPlaygroundDownloader(ms_token=token)
+    else:
+        downloader = HFPlaygroundDownloader(hf_token=token)
+
     accessGranted = { item["repo_id"] : downloader.is_access_granted(item["repo_id"], item["type"], item["backend"]) for item in list }
     return jsonify(
         {
@@ -248,8 +269,8 @@ def is_access_granted():
 @app.post("/api/getModelSize")
 def get_model_size():
     import concurrent.futures
+    list, source = request.get_json()
 
-    list = request.get_json()
     result_dict = dict()
     request_list = []
     for item in list:
@@ -267,7 +288,7 @@ def get_model_size():
     if request_list.__len__() > 0:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [
-                executor.submit(fill_size_execute, repo_id, type, result_dict)
+                executor.submit(fill_size_execute, repo_id, type, source, result_dict)
                 for repo_id, type in request_list
             ]
             concurrent.futures.wait(futures)
@@ -282,12 +303,16 @@ def get_model_size():
     )
 
 
-def fill_size_execute(repo_id: str, type: int, result_dict: dict):
+def fill_size_execute(repo_id: str, type: int, source:str, result_dict: dict):
     key = f"{repo_id}_{type}"
     if type == 4:
         total_size = utils.get_ESRGAN_size()
     else:
-        total_size = HFPlaygroundDownloader().get_model_total_size(repo_id, type)
+        if source == "modelscope":
+            total_size = MSPlaygroundDownloader().get_model_total_size(repo_id, type)
+        else:
+            total_size = HFPlaygroundDownloader().get_model_total_size(repo_id, type)
+
     with lock:
         size_cache.__setitem__(key, total_size)
         result_dict.__setitem__(key, bytes2human(total_size, "%(value).2f%(symbol)s"))
@@ -350,7 +375,8 @@ def download_model(download_request_data: DownloadModelRequestBody):
     try:
         model_download_adpater._adapter = (
             model_download_adpater.Model_Downloader_Adapter(
-                hf_token=get_bearer_token(request)
+                model_source=download_request_data.source,
+                token=get_bearer_token(request)
             )
         )
         iterator = model_download_adpater._adapter.download(download_request_data.data)

@@ -361,8 +361,10 @@ class HFPlaygroundDownloader:
         self.build_queue(file_list)
         file = self.file_queue.get_nowait()
 
+        logging.info(f"check file {file.url}")
         response = requests.head(file.url, verify=False, headers=headers, allow_redirects=True)
 
+        logging.info(f"file check response: {response.status_code}")
         return response.status_code == 200
 
 
@@ -410,7 +412,7 @@ class HFPlaygroundDownloader:
         self.download_stop = True
 
 
-def test_download_progress(dowanlod_size: int, total_size: int, speed: int):
+def test_download_progress(repo_id: str, dowanlod_size: int, total_size: int, speed: int):
     print(f"download {dowanlod_size/1024}/{total_size /1024}KB  speed {speed}/s")
 
 
@@ -425,7 +427,7 @@ def init():
     downloader = HFPlaygroundDownloader()
     downloader.on_download_progress = test_download_progress
     downloader.on_download_completed = test_download_complete
-    total_size = downloader.download("RunDiffusion/Juggernaut-X-v10", 1, thread_count=1)
+    total_size = downloader.download("RunDiffusion/Juggernaut-X-v10", 1, "default", thread_count=1)
     print(f"total-size: {total_size}")
 
 
