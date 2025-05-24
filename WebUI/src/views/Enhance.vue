@@ -596,7 +596,8 @@ async function generate() {
 }
 
 async function checkModel() {
-  return new Promise<void>(async (resolve, reject) => {
+  return new Promise<void>(async (resolve, reject) => {  
+    imageGeneration.refreshModels()  
     const checkList: CheckModelAlreadyLoadedParameters[] = []
     if (
       [3, 4].includes(mode.value) &&

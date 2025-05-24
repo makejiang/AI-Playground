@@ -29,6 +29,7 @@ class Model_Downloader_Adapter:
         self.finish = False
         self.user_stop = False
         self.singal = threading.Event()
+
         self.file_downloader = FileDownloader()
         self.file_downloader.on_download_progress = (
             self.download_model_progress_callback
@@ -36,6 +37,7 @@ class Model_Downloader_Adapter:
         self.file_downloader.on_download_completed = (
             self.download_model_completed_callback
         )
+
         self.model_downloader = MSPlaygroundDownloader(token) if model_source=='modelscope' else HFPlaygroundDownloader(token)
         self.model_downloader.on_download_progress = self.download_model_progress_callback
         self.model_downloader.on_download_completed = (
@@ -49,14 +51,14 @@ class Model_Downloader_Adapter:
     def download_model_progress_callback(
         self, repo_id: str, download_size: int, total_size: int, speed: int
     ):
-        print(
-            "download {} {}/{} speed {}".format(
-                repo_id,
-                bytes2human(download_size),
-                bytes2human(total_size),
-                bytes2human(speed),
-            )
-        )
+        # print(
+        #     "download {} {}/{} speed {}".format(
+        #         repo_id,
+        #         bytes2human(download_size),
+        #         bytes2human(total_size),
+        #         bytes2human(speed),
+        #     )
+        # )
         data = {
             "type": "download_model_progress",
             "repo_id": repo_id,
@@ -130,6 +132,7 @@ class Model_Downloader_Adapter:
                     )
                 else:
                     self.model_downloader.download(item.repo_id, item.type, item.backend)
+
             self.put_msg({"type": "allComplete"})
             self.finish = True
         except Exception as ex:

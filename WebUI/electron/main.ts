@@ -96,6 +96,7 @@ export const settings: LocalSettings = {
   currentTheme: 'lnl',
   comfyUiParameters: [],
   deviceArchOverride: undefined,
+  modelSource: 'huggingface',
 }
 
 async function loadSettings() {
@@ -385,6 +386,7 @@ function initEventHandle() {
       showBenchmark: settings.showBenchmark,
       isAdminExec: isAdmin(),
       locale: app.getLocale(),
+      modelSource: settings.modelSource,
     }
   })
 
@@ -520,6 +522,7 @@ function initEventHandle() {
       modelPaths: pathsManager.modelPaths,
       isAdminExec: settings.isAdminExec,
       version: app.getVersion(),
+      modelSource: settings.modelSource,
     }
   })
 

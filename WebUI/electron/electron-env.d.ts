@@ -37,6 +37,7 @@ type LocalSettings = {
   debug: number
   comfyUiParameters?: string[]
   deviceArchOverride?: 'bmg' | 'acm' | 'arl_h' | 'lnl' | 'mtl'
+  modelSource: string
 } & KVObject
 
 type ThemeSettings = {
@@ -49,6 +50,7 @@ type SetupData = {
   modelLists: ModelLists
   isAdminExec: boolean
   version: string
+  modelSource: string
 }
 
 type UpdateWorkflowsFromIntelResult = {

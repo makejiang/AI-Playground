@@ -176,6 +176,9 @@ def applicationExit():
 @app.post("/api/checkModelAlreadyLoaded")
 @app.input(DownloadModelRequestBody.Schema, location='json', arg_name='download_request_data')
 def check_model_already_loaded(download_request_data: DownloadModelRequestBody):
+    
+    logging.info(f"check_model_already_loaded: {download_request_data}")
+
     result_list = []
     for item in download_request_data.data:
         base_response = {

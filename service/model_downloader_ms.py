@@ -114,8 +114,8 @@ class MSPlaygroundDownloader:
     def is_gated(self, repo_id: str):
         return False
 
-    def download(self, repo_id: str, model_type: int, backend: str, thread_count: int = 4):
-        print(f"at download {backend}")
+    def download(self, repo_id: str, model_type: int, backend: str, thread_count: int = 2):
+        print(f"download {repo_id} at {backend}")
         self.repo_id = repo_id
         self.total_size = 0
         self.download_size = 0
@@ -202,13 +202,23 @@ class MSPlaygroundDownloader:
         self, file_list: List, enum_path: str, model_type: int, is_root=True
     ):
         # repo = "/".join(enum_path.split("/")[:2])
+        model_id = "/".join(enum_path.split("/")[:2])
+        file_path = "/".join(enum_path.split("/")[2:])
+
         self.total_size = 0
         try:
-            repo_files = self.hub_api.get_model_files(model_id=self.repo_id, recursive=True)
+            repo_files = self.hub_api.get_model_files(model_id=model_id, recursive=True)
             for file in repo_files:
-                if file["Type"] == "blob" and not file["Path"].endswith(('.jpg', '.jpeg', '.md', '.png', '.pdf', '.txt')):
+                if len(file_path) > 0:
+                    if file["Path"] == file_path:
+                        self.total_size += file["Size"]
+                        url = get_file_download_url(model_id=model_id, file_path=file["Path"], revision='master')
+                        url_grant = self._get_grant_url(file["Path"], revision='master')
+                        file_list.append(MSFileItem(file["Path"], file["Size"], url, url_grant))
+                        break
+                elif file["Type"] == "blob" and not file["Path"].endswith(('.jpg', '.jpeg', '.md', '.png', '.pdf')):
                     self.total_size += file["Size"]
-                    url = get_file_download_url(model_id=self.repo_id, file_path=file["Path"], revision='master')
+                    url = get_file_download_url(model_id=model_id, file_path=file["Path"], revision='master')
                     url_grant = self._get_grant_url(file["Path"], revision='master')
                     file_list.append(MSFileItem(file["Path"], file["Size"], url, url_grant))
 
@@ -219,23 +229,26 @@ class MSPlaygroundDownloader:
 
     def multiple_thread_download(self, thread_count: int):
         self.download_stop = False
+
         if self.on_download_progress is not None:
             self.prev_sec_download_size = 0
             report_thread = self.start_report_download_progress()
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=thread_count
-        ) as executor:
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
             futures = [
                 executor.submit(self.download_model_file)
                 for _ in range(min(thread_count, self.file_queue.qsize()))
             ]
             concurrent.futures.wait(futures)
             executor.shutdown()
+        
         self.completed = True
         if report_thread is not None:
             report_thread.join()
+
         if self.on_download_completed is not None:
             self.on_download_completed(self.repo_id, self.error)
+
         if not self.download_stop and self.error is None:
             self.move_to_desired_position()
         else:
@@ -289,7 +302,8 @@ class MSPlaygroundDownloader:
             time.sleep(1)
 
     def init_download(self, file: MSDownloadItem):
-        makedirs(path.dirname(file.save_filename), exist_ok=True)
+        path_file = path.dirname(file.save_filename)
+        makedirs(path_file, exist_ok=True)
 
         headers = {}
         if self.ms_token is not None:
@@ -343,21 +357,23 @@ class MSPlaygroundDownloader:
         try:
             while not self.download_stop and not self.file_queue.empty():
                 file = self.file_queue.get_nowait()
+                #print(f"start download file: {file.url}")
                 download_retry = 0
                 while True:
                     try:
                         response, fw = self.init_download(file)
                         if response.status_code != 200:
-                            download_retry += 2  # we only want to retry once in case of non network errors
+                            download_retry += 1  # we only want to retry once in case of non network errors
                             raise DownloadException(file.url)
                         # start download file
                         with response:
                             with fw:
-                                for bytes in response.iter_content(chunk_size=4096):
+                                for bytes in response.iter_content(chunk_size=8192):
                                     download_len = bytes.__len__()
                                     with self.thread_lock:
                                         self.download_size += download_len
                                     file.disk_file_size += fw.write(bytes)
+
                                     if self.download_stop:
                                         print(
                                             f"thread {Thread.native_id} exit by user stop"
@@ -383,11 +399,11 @@ class MSPlaygroundDownloader:
         self.download_stop = True
 
 
-def test_download_progress(dowanlod_size: int, total_size: int, speed: int):
-    print(f"download {dowanlod_size/1024}/{total_size /1024}KB  speed {speed}/s")
+def test_download_progress(repo_id: str, dowanlod_size: int, total_size: int, speed: int):
+    print(f"download {dowanlod_size}/{total_size}  speed {speed}/s")
 
 
-def test_download_complete(ex: Exception):
+def test_download_complete(repo_id: str, ex: Exception):
     if ex is None:
         print("download success")
     else:
@@ -395,11 +411,16 @@ def test_download_complete(ex: Exception):
 
 
 def init():
-    downloader = HFPlaygroundDownloader()
+    #repo_id = "AI-ModelScope/bge-small-en-v1.5-gguf"
+    repo_id = "MPlusPlus/dreamshaper-8"
+    downloader = MSPlaygroundDownloader()
+    expect_total_size = downloader.get_model_total_size(repo_id, 1)
+    print(f"expect total size: {expect_total_size}")
+
     downloader.on_download_progress = test_download_progress
     downloader.on_download_completed = test_download_complete
-    total_size = downloader.download("RunDiffusion/Juggernaut-X-v10", 1, thread_count=1)
-    print(f"total-size: {total_size}")
+    downloader.download(repo_id, 1, backend='default', thread_count=4)
+    
 
 
 if __name__ == "__main__":

@@ -1,368 +1,283 @@
 <template>
-  <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_PREF_SOURCE }}</p>
-      <div class="flex items-center gap-2">
-        <drop-selector
-          :array="modelSources"
-          @change="
-            (value, _) => {
-              models.modelSource = value
-              console.log('Switching to :', models.modelSource)
-            }
-          "
-        >
-          <template #selected>
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ models.modelSource }}</span>
+    <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
+        <div v-if="globalSetup.modelSource === 'modelscope'">
+            <h2 class="text-center font-bold">{{
+                languages.SETTINGS_MODEL_MODELSCOPE }}</h2>
+            <div class="flex flex-col gap-3">
+                <p>{{ languages.SETTINGS_MODEL_MODELSCOPE_API_TOKEN }}</p>
+                <div class="flex flex-col items-start gap-1">
+                    <Input type="password" v-model="models.msToken"
+                        :class="{ 'border-red-500': models.msToken && !models.msTokenIsValid }" />
+                    <div class="text-xs text-red-500 select-none"
+                        :class="{ 'opacity-0': !(models.msToken && !models.msTokenIsValid) }">
+                        {{ languages.SETTINGS_MODEL_MODELSCOPE_INVALID_TOKEN_TEXT }}
+                    </div>
+                </div>
             </div>
-          </template>
-          <template #list="slotItem">
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ slotItem.item }}</span>
+        </div>
+        <div v-else>
+            <h2 class="text-center font-bold">{{
+                languages.SETTINGS_MODEL_HUGGINGFACE }}</h2>
+            <div class="flex flex-col gap-3">
+                <p>{{ languages.SETTINGS_MODEL_HUGGINGFACE_API_TOKEN }}</p>
+                <div class="flex flex-col items-start gap-1">
+                    <Input type="password" v-model="models.hfToken"
+                        :class="{ 'border-red-500': models.hfToken && !models.hfTokenIsValid }" />
+                    <div class="text-xs text-red-500 select-none"
+                        :class="{ 'opacity-0': !(models.hfToken && !models.hfTokenIsValid) }">
+                        {{ languages.SETTINGS_MODEL_HUGGINGFACE_INVALID_TOKEN_TEXT }}
+                    </div>
+                </div>
             </div>
-          </template>
-        </drop-selector>
-      </div>
-    </div>
-    <h2 class="text-center font-bold" v-show="models.modelSource === 'huggingface'">{{ languages.SETTINGS_MODEL_HUGGINGFACE }}</h2>
-    <div class="flex flex-col gap-3" v-show="models.modelSource === 'huggingface'">
-      <p>{{ languages.SETTINGS_MODEL_HUGGINGFACE_API_TOKEN }}</p>
-      <div class="flex flex-col items-start gap-1">
-        <Input
-          type="password"
-          v-model="models.hfToken"
-          :class="{ 'border-red-500': models.hfToken && !models.hfTokenIsValid }"
-        />
-        <div
-          class="text-xs text-red-500 select-none"
-          :class="{ 'opacity-0': !(models.hfToken && !models.hfTokenIsValid) }"
-        >
-          {{ languages.SETTINGS_MODEL_HUGGINGFACE_INVALID_TOKEN_TEXT }}
+            
         </div>
-      </div>
     </div>
-    <h2 class="text-center font-bold" v-show="models.modelSource === 'modelscope'">{{ languages.SETTINGS_MODEL_MODELSCOPE }}</h2>
-    <div class="flex flex-col gap-3" v-show="models.modelSource === 'modelscope'">
-      <p>{{ languages.SETTINGS_MODEL_MODELSCOPE_API_TOKEN }}</p>
-      <div class="flex flex-col items-start gap-1">
-        <Input
-          type="password"
-          v-model="models.msToken"
-          :class="{ 'border-red-500': models.msToken && !models.msTokenIsValid }"
-        />
-        <div
-          class="text-xs text-red-500 select-none"
-          :class="{ 'opacity-0': !(models.msToken && !models.msTokenIsValid) }"
-        >
-          {{ languages.SETTINGS_MODEL_MODELSCOPE_INVALID_TOKEN_TEXT }}
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
-    <h2 class="text-center font-bold">{{ languages.SETTINGS_MODEL_SD_PRESET_MODEL }}</h2>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_STANDARD_MODEL }}</p>
-      <div class="flex items-center gap-2">
-        <drop-selector
-          :array="globalSetup.models.stableDiffusion"
-          @change="
+    <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
+        <h2 class="text-center font-bold">{{ languages.SETTINGS_MODEL_SD_PRESET_MODEL }}</h2>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_STANDARD_MODEL }}</p>
+            <div class="flex items-center gap-2">
+                <drop-selector :array="globalSetup.models.stableDiffusion" @change="
             (value, _) => {
               customPresetModel('SDStandard', value)
             }
-          "
-        >
-          <template #selected>
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ presetModel.SDStandard }}</span>
+          ">
+                    <template #selected>
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ presetModel.SDStandard }}</span>
+                        </div>
+                    </template>
+                    <template #list="slotItem">
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ slotItem.item }}</span>
+                        </div>
+                    </template>
+                </drop-selector>
+                <button class="svg-icon i-refresh w-5 h-5 text-purple-500" @animationend="removeRonate360"
+                    @click="refreshSDModles"></button>
             </div>
-          </template>
-          <template #list="slotItem">
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ slotItem.item }}</span>
-            </div>
-          </template>
-        </drop-selector>
-        <button
-          class="svg-icon i-refresh w-5 h-5 text-purple-500"
-          @animationend="removeRonate360"
-          @click="refreshSDModles"
-        ></button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_STANDARD_INPAINT_MODEL }}</p>
-      <div class="flex items-center gap-2">
-        <drop-selector
-          :array="globalSetup.models.inpaint"
-          @change="
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_STANDARD_INPAINT_MODEL }}</p>
+            <div class="flex items-center gap-2">
+                <drop-selector :array="globalSetup.models.inpaint" @change="
             (value, _) => {
               customPresetModel('SDStandardInpaint', value)
             }
-          "
-        >
-          <template #selected>
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ presetModel.SDStandardInpaint }}</span>
+          ">
+                    <template #selected>
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ presetModel.SDStandardInpaint }}</span>
+                        </div>
+                    </template>
+                    <template #list="slotItem">
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ slotItem.item }}</span>
+                        </div>
+                    </template>
+                </drop-selector>
+                <button class="svg-icon i-refresh w-5 h-5 text-purple-500" @animationend="removeRonate360"
+                    @click="refreshInpaintModles"></button>
             </div>
-          </template>
-          <template #list="slotItem">
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ slotItem.item }}</span>
-            </div>
-          </template>
-        </drop-selector>
-        <button
-          class="svg-icon i-refresh w-5 h-5 text-purple-500"
-          @animationend="removeRonate360"
-          @click="refreshInpaintModles"
-        ></button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_HD_MODEL }}</p>
-      <div class="flex items-center gap-2">
-        <drop-selector
-          :array="globalSetup.models.stableDiffusion"
-          @change="
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_HD_MODEL }}</p>
+            <div class="flex items-center gap-2">
+                <drop-selector :array="globalSetup.models.stableDiffusion" @change="
             (value, _) => {
               customPresetModel('SDHD', value)
             }
-          "
-        >
-          <template #selected>
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ presetModel.SDHD }}</span>
+          ">
+                    <template #selected>
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ presetModel.SDHD }}</span>
+                        </div>
+                    </template>
+                    <template #list="slotItem">
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ slotItem.item }}</span>
+                        </div>
+                    </template>
+                </drop-selector>
+                <button class="svg-icon i-refresh w-5 h-5 text-purple-500" @animationend="removeRonate360"
+                    @click="refreshSDModles"></button>
             </div>
-          </template>
-          <template #list="slotItem">
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ slotItem.item }}</span>
-            </div>
-          </template>
-        </drop-selector>
-        <button
-          class="svg-icon i-refresh w-5 h-5 text-purple-500"
-          @animationend="removeRonate360"
-          @click="refreshSDModles"
-        ></button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_HD_INPAINT_MODEL }}</p>
-      <div class="flex items-center gap-2">
-        <drop-selector
-          :array="globalSetup.models.inpaint"
-          @change="
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_HD_INPAINT_MODEL }}</p>
+            <div class="flex items-center gap-2">
+                <drop-selector :array="globalSetup.models.inpaint" @change="
             (value, _) => {
               customPresetModel('SDHDInpaint', value)
             }
-          "
-        >
-          <template #selected>
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ presetModel.SDHDInpaint }}</span>
+          ">
+                    <template #selected>
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ presetModel.SDHDInpaint }}</span>
+                        </div>
+                    </template>
+                    <template #list="slotItem">
+                        <div class="flex gap-2 items-center">
+                            <span class="rounded-full bg-green-500 w-2 h-2"></span>
+                            <span>{{ slotItem.item }}</span>
+                        </div>
+                    </template>
+                </drop-selector>
+                <button class="svg-icon i-refresh w-5 h-5 text-purple-500" @animationend="removeRonate360"
+                    @click="refreshInpaintModles"></button>
             </div>
-          </template>
-          <template #list="slotItem">
-            <div class="flex gap-2 items-center">
-              <span class="rounded-full bg-green-500 w-2 h-2"></span>
-              <span>{{ slotItem.item }}</span>
-            </div>
-          </template>
-        </drop-selector>
-        <button
-          class="svg-icon i-refresh w-5 h-5 text-purple-500"
-          @animationend="removeRonate360"
-          @click="refreshInpaintModles"
-        ></button>
-      </div>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+            <a href="javascript:" class="text-yellow-500" @click="restorePresetModelSettings">{{
+                languages.COM_RESTORE
+                }}</a>
+            <button class="cancel-btn" @click="cancelPresetModelChange" :disabled="!presetModelChange">
+                {{ languages.COM_CANCEL }}
+            </button>
+            <button class="confirm-btn" @click="applyPresetModelSettings" :disabled="!presetModelChange">
+                {{ languages.COM_APPLY }}
+            </button>
+        </div>
     </div>
-    <div class="flex items-center justify-end gap-3">
-      <a href="javascript:" class="text-yellow-500" @click="restorePresetModelSettings">{{
-        languages.COM_RESTORE
-      }}</a>
-      <button class="cancel-btn" @click="cancelPresetModelChange" :disabled="!presetModelChange">
-        {{ languages.COM_CANCEL }}
-      </button>
-      <button class="confirm-btn" @click="applyPresetModelSettings" :disabled="!presetModelChange">
-        {{ languages.COM_APPLY }}
-      </button>
-    </div>
-  </div>
-  <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
-    <h2 class="text-center font-bold">{{ languages.SETTINGS_BASIC_PATHS }}</h2>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_BASIC_LLM_CHECKPOINTS }}</p>
-      <folder-selector
-        v-model:folder="paths.llm"
-        @update:folder="(value) => customPathsSettings('llm', value)"
-      ></folder-selector>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_CHECKPOINTS }}</p>
-      <folder-selector
-        v-model:folder="paths.stableDiffusion"
-        @update:folder="(value) => customPathsSettings('stableDiffusion', value)"
-      ></folder-selector>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_INPAINT_CHECKPOINTS }}</p>
-      <folder-selector
-        v-model:folder="paths.stableDiffusion"
-        @update:folder="(value) => customPathsSettings('inpaint', value)"
-      ></folder-selector>
-    </div>
-    <!-- <div class="flex flex-col gap-3">
+    <div class="border-b border-color-spilter flex flex-col gap-5 py-4">
+        <h2 class="text-center font-bold">{{ languages.SETTINGS_BASIC_PATHS }}</h2>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_BASIC_LLM_CHECKPOINTS }}</p>
+            <folder-selector v-model:folder="paths.llm"
+                @update:folder="(value) => customPathsSettings('llm', value)"></folder-selector>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_CHECKPOINTS }}</p>
+            <folder-selector v-model:folder="paths.stableDiffusion"
+                @update:folder="(value) => customPathsSettings('stableDiffusion', value)"></folder-selector>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_INPAINT_CHECKPOINTS }}</p>
+            <folder-selector v-model:folder="paths.stableDiffusion"
+                @update:folder="(value) => customPathsSettings('inpaint', value)"></folder-selector>
+        </div>
+        <!-- <div class="flex flex-col gap-3">
         <p>{{ languages.SETTINGS_MODEL_SD_VAE }}</p>
         <folder-selector v-model:folder="paths.vae"
             @update:folder="(value) => customPathsSettings('vae', value)"></folder-selector>
     </div> -->
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.SETTINGS_MODEL_SD_LORA }}</p>
-      <folder-selector
-        v-model:folder="paths.lora"
-        @update:folder="(value) => customPathsSettings('lora', value)"
-      ></folder-selector>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.SETTINGS_MODEL_SD_LORA }}</p>
+            <folder-selector v-model:folder="paths.lora"
+                @update:folder="(value) => customPathsSettings('lora', value)"></folder-selector>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+            <a href="javascript:" class="text-yellow-500" @click="restorePathsSettings">{{
+                languages.COM_RESTORE
+                }}</a>
+            <button class="cancel-btn" @click="cancelPathsSettings" :disabled="!pathsChange">
+                {{ languages.COM_CANCEL }}
+            </button>
+            <button class="confirm-btn" @click="applyPathsSettings" :disabled="!pathsChange">
+                {{ languages.COM_APPLY }}
+            </button>
+        </div>
     </div>
-    <div class="flex items-center justify-end gap-3">
-      <a href="javascript:" class="text-yellow-500" @click="restorePathsSettings">{{
-        languages.COM_RESTORE
-      }}</a>
-      <button class="cancel-btn" @click="cancelPathsSettings" :disabled="!pathsChange">
-        {{ languages.COM_CANCEL }}
-      </button>
-      <button class="confirm-btn" @click="applyPathsSettings" :disabled="!pathsChange">
-        {{ languages.COM_APPLY }}
-      </button>
-    </div>
-  </div>
-  <div class="flex flex-col gap-5 py-4">
-    <div>
-      <h2 class="text-center font-bold mb-1">{{ languages.SETTINGS_MODEL_DOWNLOAD }}</h2>
-      <p class="text-xs text-justify text-gray-300">{{ languages.SETTINGS_MODEL_DOWNLOAD_DESC }}</p>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.DOWNLOADER_FOR_IMAGE_GENERATE }}</p>
+    <div class="flex flex-col gap-5 py-4">
+        <div>
+            <h2 class="text-center font-bold mb-1">{{ languages.SETTINGS_MODEL_DOWNLOAD }}</h2>
+            <p class="text-xs text-justify text-gray-300">{{ languages.SETTINGS_MODEL_DOWNLOAD_DESC }}</p>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.DOWNLOADER_FOR_IMAGE_GENERATE }}</p>
 
-      <div class="flex justify-between items-center gap-6">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}: dreamshaper-8</span
-        >
-        <span class="flex-none text-right">6.46 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('Lykon/dreamshaper-8', Const.MODEL_TYPE_STABLE_DIFFUSION)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-      <div class="flex justify-between items-center gap-6">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}: Juggernaut-XL-v9</span
-        >
-        <span class="flex-none text-right">7.65 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('RunDiffusion/Juggernaut-XL-v9', Const.MODEL_TYPE_STABLE_DIFFUSION)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
+            <div class="flex justify-between items-center gap-6">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}:
+                    dreamshaper-8</span>
+                <span class="flex-none text-right">6.46 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('Lykon/dreamshaper-8', Const.MODEL_TYPE_STABLE_DIFFUSION)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+            <div class="flex justify-between items-center gap-6">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}:
+                    Juggernaut-XL-v9</span>
+                <span class="flex-none text-right">7.65 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('RunDiffusion/Juggernaut-XL-v9', Const.MODEL_TYPE_STABLE_DIFFUSION)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.DOWNLOADER_FOR_INAPINT_GENERATE }}</p>
+            <div class="flex justify-between items-center gap-6">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}:
+                    dreamshaper-8-inpainting</span>
+                <span class="flex-none text-right">4.45 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('Lykon/dreamshaper-8-inpainting', Const.MODEL_TYPE_INPAINT)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.DOWNLOADER_FOR_IMAGE_LORA }}</p>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}:
+                    lcm-lora-sdv1-5</span>
+                <span class="flex-none text-right">128 MB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('latent-consistency/lcm-lora-sdv1-5', Const.MODEL_TYPE_LORA)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}:
+                    lcm-lora-sdxl</span>
+                <span class="flex-none text-right">375.61 MB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('latent-consistency/lcm-lora-sdxl', Const.MODEL_TYPE_LORA)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.DOWNLOADER_FOR_ANSWER_GENERATE }}</p>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-300 flex-auto">microsoft/Phi-3-mini-4k-instruct</span>
+                <span class="flex-none text-right">7.11 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('microsoft/Phi-3-mini-4k-instruct', Const.MODEL_TYPE_LLM)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col gap-3">
+            <p>{{ languages.DOWNLOADER_FOR_RAG_QUERY }}</p>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}:
+                    bge-large-en-v1.5</span>
+                <span class="flex-none text-right">1.25 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('BAAI/bge-large-en-v1.5', Const.MODEL_TYPE_EMBEDDING)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-300 flex-auto">{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}:
+                    bge-large-zh-v1.5</span>
+                <span class="flex-none text-right">1.21 GB</span>
+                <button class="text-yellow-500 flex-none"
+                    @click="downloadModel('BAAI/bge-large-zh-v1.5', Const.MODEL_TYPE_EMBEDDING)">
+                    {{ languages.COM_DOWNLOAD }}
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.DOWNLOADER_FOR_INAPINT_GENERATE }}</p>
-      <div class="flex justify-between items-center gap-6">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}: dreamshaper-8-inpainting</span
-        >
-        <span class="flex-none text-right">4.45 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('Lykon/dreamshaper-8-inpainting', Const.MODEL_TYPE_INPAINT)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.DOWNLOADER_FOR_IMAGE_LORA }}</p>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}: lcm-lora-sdv1-5</span
-        >
-        <span class="flex-none text-right">128 MB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('latent-consistency/lcm-lora-sdv1-5', Const.MODEL_TYPE_LORA)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}: lcm-lora-sdxl</span
-        >
-        <span class="flex-none text-right">375.61 MB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('latent-consistency/lcm-lora-sdxl', Const.MODEL_TYPE_LORA)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.DOWNLOADER_FOR_ANSWER_GENERATE }}</p>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-300 flex-auto">microsoft/Phi-3-mini-4k-instruct</span>
-        <span class="flex-none text-right">7.11 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('microsoft/Phi-3-mini-4k-instruct', Const.MODEL_TYPE_LLM)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-    </div>
-    <div class="flex flex-col gap-3">
-      <p>{{ languages.DOWNLOADER_FOR_RAG_QUERY }}</p>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_STANDARD }}: bge-large-en-v1.5</span
-        >
-        <span class="flex-none text-right">1.25 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('BAAI/bge-large-en-v1.5', Const.MODEL_TYPE_EMBEDDING)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-300 flex-auto"
-          >{{ languages.SETTINGS_MODEL_IMAGE_RESOLUTION_HD }}: bge-large-zh-v1.5</span
-        >
-        <span class="flex-none text-right">1.21 GB</span>
-        <button
-          class="text-yellow-500 flex-none"
-          @click="downloadModel('BAAI/bge-large-zh-v1.5', Const.MODEL_TYPE_EMBEDDING)"
-        >
-          {{ languages.COM_DOWNLOAD }}
-        </button>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -387,7 +302,6 @@ const presetModelChange = ref(false)
 const paths = reactive<ModelPaths>(Object.assign({}, toRaw(globalSetup.paths)))
 const pathsChange = ref(false)
 
-const modelSources = ['huggingface', 'modelscope']
 
 const emits = defineEmits<{
   (
@@ -453,9 +367,15 @@ function applyPresetModelSettings() {
 }
 
 function restorePresetModelSettings() {
-  presetModel.SDStandard = 'Lykon/dreamshaper-8'
-  presetModel.SDStandardInpaint = 'Lykon/dreamshaper-8-inpainting'
-  presetModel.SDHD = 'RunDiffusion/Juggernaut-XL-v9'
+  if (globalSetup.modelSource === 'huggingface') {
+    presetModel.SDStandard = 'Lykon/dreamshaper-8'
+    presetModel.SDStandardInpaint = 'Lykon/dreamshaper-8-inpainting'
+    presetModel.SDHD = 'RunDiffusion/Juggernaut-XL-v9'
+  } else {
+    presetModel.SDStandard = 'MPlusPlus/dreamshaper-8'
+    presetModel.SDStandardInpaint = 'MPlusPlus/dreamshaper-8-inpainting'
+    presetModel.SDHD = 'MPlusPlus/Juggernaut-XL-v9'
+  }
   presetModel.SDHDInpaint = useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL
 
   applyPresetModelSettings()

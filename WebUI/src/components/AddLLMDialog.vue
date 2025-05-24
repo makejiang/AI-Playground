@@ -105,7 +105,7 @@ async function addModel() {
     return
   }
 
-  const urlExists = await models.checkIfModelUrlExists(modelRequest.value, models.modelSource)
+  const urlExists = await models.checkIfModelUrlExists(modelRequest.value, globalSetup.modelSource)
   if (!urlExists) {
     cancelAndShowWarning(i18nState.ERROR_REPO_NOT_EXISTS)
     return

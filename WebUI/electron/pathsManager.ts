@@ -65,7 +65,7 @@ export class PathsManager {
     }
   }
   scanSDModleLists(returnDefaults = true) {
-    const models = returnDefaults ? ['Lykon/dreamshaper-8', 'RunDiffusion/Juggernaut-XL-v9'] : []
+    const models = returnDefaults ? ['Lykon/dreamshaper-8', 'RunDiffusion/Juggernaut-XL-v9', 'MPlusPlus/dreamshaper-8', 'MPlusPlus/Juggernaut-XL-v9'] : []
     const dir = this.modelPaths.stableDiffusion
     if (fs.existsSync(dir)) {
       const modelsSet = new Set(models)
@@ -144,7 +144,7 @@ export class PathsManager {
   }
   scanLora(returnDefaults = true) {
     const models = returnDefaults
-      ? ['None', 'latent-consistency/lcm-lora-sdxl', 'latent-consistency/lcm-lora-sdv1-5']
+      ? ['None', 'latent-consistency/lcm-lora-sdxl', 'latent-consistency/lcm-lora-sdv1-5', 'AI-ModelScope/lcm-lora-sdxl', 'eavesy/lcm-lora-sdv1-5']
       : []
     const loraDir = this.modelPaths.lora
     if (fs.existsSync(loraDir)) {
@@ -198,7 +198,7 @@ export class PathsManager {
   }
 
   scanInpaint(returnDefaults = true) {
-    const models = returnDefaults ? ['Lykon/dreamshaper-8-inpainting'] : []
+    const models = returnDefaults ? ['Lykon/dreamshaper-8-inpainting', 'MPlusPlus/dreamshaper-8-inpainting'] : []
     const dir = this.modelPaths.inpaint
     if (fs.existsSync(dir)) {
       const modelsSet = new Set(models)

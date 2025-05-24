@@ -2,15 +2,21 @@ import { defineStore } from 'pinia'
 import * as util from '../util'
 import { useI18N } from './i18n'
 import { ModelLists, ModelPaths } from './models'
+import { stat } from 'fs'
 
 type GlobalSetupState = 'running' | 'verifyBackend' | 'manageInstallations' | 'loading' | 'failed'
+export type ModelSource = 'huggingface' | 'modelscope'
 
 export const useGlobalSetup = defineStore('globalSetup', () => {
+  localStorage.clear()
+
   const state = reactive<KVObject>({
     isAdminExec: false,
     device: '',
-    version: '0.0.0.1',
+    version: '0.0.0.1',    
   })
+
+  const modelSource = ref<ModelSource>('huggingface')
 
   const defaultBackendBaseUrl = ref('http://127.0.0.1:9999')
 
@@ -24,27 +30,50 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
     embedding: new Array<string>(),
   })
 
-  const modelSettings = reactive<KVObject>({
-    graphics: 0,
-    resolution: 0,
-    quality: 0,
-    enableRag: false,
-    sd_model: 'Lykon/dreamshaper-8',
-    inpaint_model: 'Lykon/dreamshaper-8-inpainting',
-    negativePrompt: 'bad hands, nsfw',
-    generateNumber: 1,
-    width: 512,
-    height: 512,
-    guidanceScale: 7.5,
-    inferenceSteps: 20,
-    seed: -1,
-    lora: 'None',
-    scheduler: 'None',
-    embedding: 'BAAI/bge-large-en-v1.5',
-    imagePreview: 1,
-    safeCheck: 1,
+  const modelSettingsHF: KVObject = {
+            graphics: 0,
+            resolution: 0,
+            quality: 0,
+            enableRag: false,
+            sd_model: 'Lykon/dreamshaper-8',
+            inpaint_model: 'Lykon/dreamshaper-8-inpainting',
+            negativePrompt: 'bad hands, nsfw',
+            generateNumber: 1,
+            width: 512,
+            height: 512,
+            guidanceScale: 7.5,
+            inferenceSteps: 20,
+            seed: -1,
+            lora: 'None',
+            scheduler: 'None',
+            embedding: 'BAAI/bge-large-en-v1.5',
+            imagePreview: 1,
+            safeCheck: 1,
+        }
+  const modelSettingsMS: KVObject = {
+            graphics: 0,
+            resolution: 0,
+            quality: 0,
+            enableRag: false,
+            sd_model: 'MPlusPlus/dreamshaper-8',
+            inpaint_model: 'MPlusPlus/dreamshaper-8-inpainting',
+            negativePrompt: 'bad hands, nsfw',
+            generateNumber: 1,
+            width: 512,
+            height: 512,
+            guidanceScale: 7.5,
+            inferenceSteps: 20,
+            seed: -1,
+            lora: 'None',
+            scheduler: 'None',
+            embedding: 'MPlusPlus/bge-large-en-v1.5',
+            imagePreview: 1,
+            safeCheck: 1,
+        }
+  const modelSettings = computed(():KVObject => {
+    return modelSource.value === 'modelscope' ? modelSettingsMS : modelSettingsHF
   })
-
+  
   const paths = ref<ModelPaths>({
     llm: '',
     ggufLLM: '',
@@ -56,11 +85,21 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
     ESRGAN: '',
   })
 
-  const presetModel = reactive<StringKV>({
+  const presetModelHF : StringKV = {
     SDStandard: 'Lykon/dreamshaper-8',
     SDStandardInpaint: 'Lykon/dreamshaper-8-inpainting',
     SDHD: 'RunDiffusion/Juggernaut-XL-v9',
     SDHDInpaint: useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL,
+  }
+  const presetModelMS: StringKV = {
+    SDStandard: 'MPlusPlus/dreamshaper-8',
+    SDStandardInpaint: 'MPlusPlus/dreamshaper-8-inpainting',
+    SDHD: 'MPlusPlus/Juggernaut-XL-v9',
+    SDHDInpaint: useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL,
+  }
+  //const presetModel = ref<StringKV>(presetModelHF)
+  const presetModel = computed(():StringKV => {
+      return modelSource.value === 'modelscope' ? presetModelMS : presetModelHF
   })
 
   const graphicsList = ref(new Array<GraphicsItem>())
@@ -68,6 +107,7 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
   const loadingState = ref<GlobalSetupState>('verifyBackend')
   const errorMessage = ref('')
   const hdPersistentConfirmation = ref(localStorage.getItem('HdPersistentConfirmation') === 'true')
+  
 
   watchEffect(() => {
     localStorage.setItem('HdPersistentConfirmation', hdPersistentConfirmation.value.toString())
@@ -81,6 +121,15 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
     models.value.inpaint.push(useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL)
     state.isAdminExec = setupData.isAdminExec
     state.version = setupData.version
+    
+    
+    if (setupData.modelSource === 'modelscope' || 
+        setupData.modelSource === 'huggingface') {
+        console.log('model source:', setupData.modelSource)
+
+        modelSource.value = setupData.modelSource 
+    }
+
     const aiBackendInfo = apiServiceInformation.find((item) => item.serviceName === 'ai-backend')
     if (!aiBackendInfo) {
       throw new Error('ai-backend service not found')
@@ -108,6 +157,7 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
       })
       window.electronAPI.exitApp()
     }
+
     loadUserSettings()
   }
 
@@ -136,7 +186,7 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
   }
 
   async function refreshLLMModles() {
-    models.value.stableDiffusion = await window.electronAPI.refreshLLMModles()
+    models.value.llm = await window.electronAPI.refreshLLMModles()
   }
 
   async function refreshSDModles() {
@@ -189,16 +239,16 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
       const data = JSON.parse(dataStr) as StringKV
       Object.keys(presetModel).forEach((key) => {
         if (key in data) {
-          presetModel[key] = data[key]
+          presetModel.value[key] = data[key]
         }
       })
     }
   }
 
-  function applyPresetModelSettings(presetModelSettings: StringKV) {
+  function applyPresetModelSettings(presetModelSettings: StringKV, ) {
     Object.keys(presetModel).forEach((key) => {
       if (key in presetModelSettings) {
-        presetModel[key] = presetModelSettings[key]
+        presetModel.value[key] = presetModelSettings[key]
       }
     })
     localStorage.setItem('PresetModelSettings', JSON.stringify(toRaw(presetModel)))
@@ -206,50 +256,54 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
 
   function loadUserSettings() {
     const dataStr = localStorage.getItem('ModelSettings')
+    
     if (dataStr) {
       const data = JSON.parse(dataStr) as KVObject
       Object.keys(data).forEach((key) => {
-        modelSettings[key] = data[key]
+        modelSettings.value[key] = data[key]
       })
     }
+
     assertSelectExist()
+    console.log('model settings:', modelSettings.value.sd_model)
   }
 
   function assertSelectExist() {
     let changeUserSetup = false
-    if (models.value.llm.length > 0 && !models.value.llm.includes(modelSettings.llm_model)) {
-      modelSettings.llm = models.value.llm[0]
+    if (models.value.llm.length > 0 && !models.value.llm.includes(modelSettings.value.llm_model)) {
+      modelSettings.value.llm = models.value.llm[0]
       changeUserSetup = true
     }
     if (
       models.value.stableDiffusion.length > 0 &&
-      !models.value.stableDiffusion.includes(modelSettings.sd_model)
+      !models.value.stableDiffusion.includes(modelSettings.value.sd_model)
     ) {
-      modelSettings.sd_model = models.value.stableDiffusion[0]
+      modelSettings.value.sd_model = models.value.stableDiffusion[0]
+      changeUserSetup = true
+      console.log('model settings:', modelSettings.value.sd_model)
+    }
+    if (models.value.lora.length > 0 && !models.value.lora.includes(modelSettings.value.lora)) {
+      modelSettings.value.lora = models.value.lora[0]
       changeUserSetup = true
     }
-    if (models.value.lora.length > 0 && !models.value.lora.includes(modelSettings.lora)) {
-      modelSettings.lora = models.value.lora[0]
-      changeUserSetup = true
-    }
-    if (!graphicsList.value.find((item) => item.index == modelSettings.graphics)) {
-      modelSettings.graphics = graphicsList.value[0].index
+    if (!graphicsList.value.find((item) => item.index == modelSettings.value.graphics)) {
+      modelSettings.value.graphics = graphicsList.value[0].index
     }
     if (changeUserSetup) {
-      localStorage.setItem('ModelSettings', JSON.stringify(toRaw(modelSettings)))
+      localStorage.setItem('ModelSettings', JSON.stringify(toRaw(modelSettings.value)))
     }
     return changeUserSetup
   }
 
   function applyModelSettings(newSettings: KVObject) {
     Object.keys(newSettings).forEach((key) => {
-      if (key in modelSettings) {
-        modelSettings[key] = newSettings[key]
+      if (key in modelSettings.value) {
+        modelSettings.value[key] = newSettings[key]
       }
     })
-    const rawModelSettings = toRaw(modelSettings)
+    const rawModelSettings = toRaw(modelSettings.value)
     localStorage.setItem('ModelSettings', JSON.stringify(rawModelSettings))
-    if (modelSettings['resolution'] == 3) {
+    if (modelSettings.value['resolution'] == 3) {
       const manualModelSettings: StringKV = {}
       Object.keys(rawModelSettings).forEach((key) => {
         if (key != 'resolution' && key != 'quality') {
@@ -263,6 +317,7 @@ export const useGlobalSetup = defineStore('globalSetup', () => {
   return {
     state,
     modelSettings,
+    modelSource,
     presetModel,
     models,
     paths,
