@@ -88,6 +88,10 @@
     {
       "from": "../3rdpartynoticeslicenses.txt",
       "to": "3rdpartynoticeslicenses.txt"
+    },
+    {
+      "from": "../oem",
+      "to": "oem"
     }
   ],
   "productName": "AI Playground",

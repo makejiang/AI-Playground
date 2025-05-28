@@ -1,3 +1,7 @@
+import mitt from "mitt"
+
+export const emitter = mitt()
+
 export async function copyImage(url: string) {
   const response = await fetch(url)
   const blob = await response.blob()

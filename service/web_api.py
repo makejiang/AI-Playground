@@ -44,7 +44,10 @@ from psutil._common import bytes2human
 import traceback
 from ipex_embedding import IpexEmbeddingModel
 from pydantic import BaseModel
+import json, base64
 import logging
+import apps
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
@@ -488,6 +491,169 @@ def cache_mask_image():
     mask_image.save(file_path)
     utils.cache_file(file_path, os.path.getsize(file_path))
     return file_path
+
+##################################################################
+# following api for app manager
+isvapps = {
+    'AIPPT': apps.aippt.app_instance,
+    'Coze': apps.aippt.app_instance,
+    'FlowyAI': apps.aippt.app_instance,
+    'Infinity': apps.aippt.app_instance,
+    'AIPCMeeting': apps.aippt.app_instance,
+    'FlashPaint': apps.aippt.app_instance,
+} 
+
+
+@app.post("/api/app/status")
+def get_app_status():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"status": "not-supported"})
+
+    if app_op.is_running(app_info['processname']):
+        return jsonify({"status": "running"})
+
+    if app_op.is_installed(app_info['installedname']):
+        return jsonify({"status": "installed"})
+
+    return jsonify({"status": "not-installed"})
+
+
+@app.post("/api/app/install")
+def install_app():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"result": False, "message": "App not supported"})
+
+    appname = app_info.get("name")
+    installer = app_info.get("installer")
+    ret = app_op.install(appname, installer)
+
+    return jsonify({"result": ret})
+
+@app.post("/api/app/installstream")
+def install_app_stream():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    
+    appname = app_info.get("name")
+    installer = app_info.get("installer")
+    installedname = app_info.get("installedname")
+
+    iterator = app_op.install_stream(appname, installer, installedname)
+    return Response(stream_with_context(iterator), content_type="text/event-stream")
+
+@app.post("/api/app/uninstall")
+def uninstall_app():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"result": False, "message": "App not supported"})
+
+    installedname = app_info.get("installedname")
+    uninstallProcessName = app_info.get("uninstallProcessName")
+
+    ret = app_op.uninstall(installedname, uninstallProcessName)
+    return jsonify({"result": ret, "message": "Uninstall failed" if not ret else "Uninstall succeeded"})
+
+@app.post("/api/app/uninstallstream")
+def uninstall_app_stream():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    
+    installedname = app_info.get("installedname")
+    uninstallProcessName = app_info.get("uninstallProcessName")
+
+    iterator = app_op.uninstall_stream(installedname, uninstallProcessName)
+    return Response(stream_with_context(iterator), content_type="text/event-stream")
+
+@app.post("/api/app/run")
+def run_app():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"result": False, "message": "App not supported"})
+
+    processname = app_info.get("processname")
+    installedname = app_info.get("installedname")
+
+    ret = app_op.run(processname, installedname)
+    return jsonify({"result": ret, "message": "Run failed" if not ret else "Run succeeded"})
+
+
+@app.post("/api/app/close")
+def close_app():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"result": False, "message": "App not supported"})
+    
+    processname = app_info.get("processname")
+    ret = app_op.close(processname)
+    return jsonify({"result": ret, "message": "Close failed" if not ret else "Close succeeded"})
+
+
+@app.post("/api/app/getOemAppInfo")
+def get_oem_info():
+    # Path to OEM directory
+    oem_dir = os.path.join('..', 'oem')
+    oem_json_path = os.path.join(oem_dir, 'oem.json')
+    
+    try:
+        # Read the main OEM JSON file
+        with open(oem_json_path, 'r', encoding='utf-8') as f:
+            oem_data = json.load(f)
+        
+        oem_name = oem_data.get('name', '')
+        app_list = oem_data.get('apps', [])
+        
+        # Process each app
+        apps_info = []
+        for app_name in app_list:
+            app_json_path = os.path.join(oem_dir, app_name, 'app.json')
+            
+            try:
+                # Read the app JSON file
+                with open(app_json_path, 'r', encoding='utf-8') as f:
+                    app_data = json.load(f)
+                
+                # Update the iconUrl to include the full path
+                if 'iconUrl' in app_data and not app_data['iconUrl'].startswith('/'):
+                    app_data['iconUrl'] = os.path.join(oem_dir, app_name, app_data['iconUrl'])
+                
+                # add iconData in app_data
+                app_data['iconData'] = base64.b64encode(open(app_data['iconUrl'], 'rb').read()).decode('utf-8')
+                apps_info.append(app_data)
+            except Exception as e:
+                logging.error(f"Error reading app JSON for {app_name}: {e}")
+        
+        # Construct the final result
+        result = {
+            "name": oem_name,
+            "apps": apps_info
+        }        
+        return json.dumps(result, ensure_ascii=False)
+
+    except Exception as e:
+        logging.error(f"Error in getOemApps: {e}")
+        return json.dumps({"name": "", "apps": []}, ensure_ascii=False)
+
+
+
 
 
 if __name__ == "__main__":

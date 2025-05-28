@@ -1,0 +1,11 @@
+{
+    "name": "Kutool For Word",
+    "nameCN": "Kutools For Word",
+    "tags": ["Office", "AI", "助手", "效率"],
+    "iconUrl": "logo.kutools.png",
+    "homeUrl": "https://zh-cn.extendoffice.com",
+    "installer": "WordKutools.exe",
+    "processname": "",
+    "installedname": "",
+    "uninstallProcessName": ""
+}

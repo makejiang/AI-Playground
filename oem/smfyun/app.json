@@ -1,0 +1,11 @@
+{
+    "name": "smfyun",
+    "nameCN": "神马",
+    "tags": ["搜索", "AI", "购物", "App Store"],
+    "iconUrl": "logo.smfyun.png",
+    "homeUrl": "https://www.smfyun.com/",
+    "installer": "",
+    "processname": "",
+    "installedname": "",
+    "uninstallProcessName": ""
+}
