@@ -1,7 +1,7 @@
 declare interface Window {
   chrome: Chrome
   electronAPI: electronAPI
-  envVars: { platformTitle: string; productVersion: string; debugToolsEnabled: boolean }
+  envVars: { platformTitle: string; productVersion: string; debugToolsEnabled: boolean; modelSource: string }
 }
 
 interface ImportMetaEnv {
@@ -43,6 +43,7 @@ type electronAPI = {
   setIgnoreMouseEvents(ignore: boolean): void
   miniWindow(): void
   exitApp(): void
+  restartApp(): void
   getMediaUrlBase(): Promise<string>
   saveImage(url: string): void
   openImageWin(url: string, title: string, width: number, height: number): void

@@ -1,6 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { LlmBackend } from './textInference'
 import { useBackendServices } from './backendServices'
+import { ModelSource } from './globalSetup'
 
 export type ModelPaths = {
   llm: string
@@ -30,61 +31,79 @@ export type ModelType =
   | 'undefined'
   | LlmBackend
 
+
 export type Model = {
   name: string
   downloaded: boolean
   type: ModelType
   default: boolean
   backend?: LlmBackend
+  source?: ModelSource[]
 }
 
 const predefinedModels: Omit<Model, 'downloaded'>[] = [
-  { name: 'Qwen/Qwen2-1.5B-Instruct', type: 'ipexLLM', default: false },
-  { name: 'microsoft/Phi-3-mini-4k-instruct', type: 'ipexLLM', default: true },
-  { name: 'mistralai/Mistral-7B-Instruct-v0.3', type: 'ipexLLM', default: false },
-  { name: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', type: 'ipexLLM', default: false },
-  { name: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', type: 'ipexLLM', default: false },
+  { name: 'Qwen/Qwen2-1.5B-Instruct', type: 'ipexLLM', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'microsoft/Phi-3-mini-4k-instruct', type: 'ipexLLM', default: true, source: ['huggingface'] },
+  { name: 'mistralai/Mistral-7B-Instruct-v0.3', type: 'ipexLLM', default: false, source: ['huggingface'] },
+  { name: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', type: 'ipexLLM', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', type: 'ipexLLM', default: false, source: ['huggingface', 'modelscope'] },
   {
     name: 'bartowski/Llama-3.2-3B-Instruct-GGUF/Llama-3.2-3B-Instruct-Q4_K_S.gguf',
     type: 'llamaCPP',
     default: true,
+    source: ['huggingface', 'modelscope'],
   },
   {
     name: 'bartowski/Llama-3.2-3B-Instruct-GGUF/Llama-3.2-3B-Instruct-Q8_0.gguf',
     type: 'llamaCPP',
     default: false,
+    source: ['huggingface', 'modelscope'],
   },
   {
     name: 'bartowski/Meta-Llama-3.1-8B-Instruct-GGUF/Meta-Llama-3.1-8B-Instruct-Q5_K_S.gguf',
     type: 'llamaCPP',
     default: false,
+    source: ['huggingface', 'modelscope'],
   },
   {
     name: 'HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF/smollm2-1.7b-instruct-q4_k_m.gguf',
     type: 'llamaCPP',
     default: false,
+    source: ['huggingface', 'modelscope'],
   },
-  { name: 'OpenVINO/Phi-3.5-mini-instruct-int4-ov', type: 'openVINO', default: true },
-  { name: 'OpenVINO/Phi-3-mini-4k-instruct-int4-ov', type: 'openVINO', default: false },
-  { name: 'OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-ov', type: 'openVINO', default: false },
-  { name: 'OpenVINO/DeepSeek-R1-Distill-Qwen-7B-int4-ov', type: 'openVINO', default: false },
-  { name: 'OpenVINO/Mistral-7B-Instruct-v0.2-int4-ov', type: 'openVINO', default: false },
-  { name: 'OpenVINO/TinyLlama-1.1B-Chat-v1.0-int4-ov', type: 'openVINO', default: false },
-  { name: 'BAAI/bge-large-en-v1.5', type: 'embedding', default: true, backend: 'ipexLLM' },
-  { name: 'BAAI/bge-large-zh-v1.5', type: 'embedding', default: false, backend: 'ipexLLM' },
+  { name: 'OpenVINO/Phi-3.5-mini-instruct-int4-ov', type: 'openVINO', default: true, source: ['huggingface', 'modelscope'] },
+  { name: 'OpenVINO/Phi-3-mini-4k-instruct-int4-ov', type: 'openVINO', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-ov', type: 'openVINO', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'OpenVINO/DeepSeek-R1-Distill-Qwen-7B-int4-ov', type: 'openVINO', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'OpenVINO/Mistral-7B-Instruct-v0.2-int4-ov', type: 'openVINO', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'OpenVINO/TinyLlama-1.1B-Chat-v1.0-int4-ov', type: 'openVINO', default: false, source: ['huggingface', 'modelscope'] },
+  { name: 'BAAI/bge-large-en-v1.5', type: 'embedding', default: true, backend: 'ipexLLM', source: ['huggingface'] },
+  { name: 'BAAI/bge-large-zh-v1.5', type: 'embedding', default: false, backend: 'ipexLLM', source: ['huggingface'] },
+  { name: 'AI-ModelScope/bge-large-en-v1.5', type: 'embedding', default: true, backend: 'ipexLLM', source: ['modelscope'] },
+  { name: 'AI-ModelScope/bge-large-zh-v1.5', type: 'embedding', default: false, backend: 'ipexLLM', source: ['modelscope'] },
   {
     name: 'ChristianAzinn/bge-small-en-v1.5-gguf',
     type: 'embedding',
     default: true,
     backend: 'llamaCPP',
+    source: ['huggingface'],
   },
-  { name: 'EmbeddedLLM/bge-m3-int4-sym-ov', type: 'embedding', default: true, backend: 'openVINO' },
+  {
+    name: 'AI-ModelScope/bge-small-en-v1.5-gguf',
+    type: 'embedding',
+    default: true,
+    backend: 'llamaCPP',
+    source: ['modelscope'],
+  },
+  { name: 'EmbeddedLLM/bge-m3-int4-sym-ov', type: 'embedding', default: true, backend: 'openVINO', source: ['huggingface'] },
+  { name: 'aiplayground/bge-m3-int4-sym-ov', type: 'embedding', default: true, backend: 'openVINO', source: ['modelscope'] },
 ]
 
 export const useModels = defineStore(
   'models',
   () => {
     const hfToken = ref<string | undefined>(undefined)
+    const msToken = ref<string | undefined>(undefined)
     const models = ref<Model[]>([])
     const backendServices = useBackendServices()
 
@@ -154,8 +173,8 @@ export const useModels = defineStore(
       return aiBackendUrl
     }
 
-    async function checkIfHuggingFaceUrlExists(repo_id: string) {
-      const response = await fetch(`${aipgBackendUrl()}/api/checkHFRepoExists?repo_id=${repo_id}`)
+    async function checkIfModelUrlExists(repo_id: string, model_source: string) {
+      const response = await fetch(`${aipgBackendUrl()}/api/checkRepoExists?repo_id=${repo_id}&source=${model_source}`, )
       const data = await response.json()
       return data.exists
     }
@@ -163,11 +182,12 @@ export const useModels = defineStore(
     async function checkModelAlreadyLoaded(params: CheckModelAlreadyLoadedParameters[]) {
       const response = await fetch(`${aipgBackendUrl()}/api/checkModelAlreadyLoaded`, {
         method: 'POST',
-        body: JSON.stringify({ data: params }),
+        body: JSON.stringify({ data: params, source: '' }),
         headers: {
           'Content-Type': 'application/json',
         },
       })
+
       const parsedResponse = (await response.json()) as ApiResponse & {
         data: CheckModelAlreadyLoadedResult[]
       }
@@ -180,17 +200,19 @@ export const useModels = defineStore(
       models,
       hfToken,
       hfTokenIsValid: computed(() => hfToken.value?.startsWith('hf_')),
+      msToken,
+      msTokenIsValid: computed(() => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msToken.value || '')),
       downloadList,
       addModel,
       refreshModels,
       download,
-      checkIfHuggingFaceUrlExists,
+      checkIfModelUrlExists,
       checkModelAlreadyLoaded,
     }
   },
   {
     persist: {
-      pick: ['hfToken'],
+      pick: ['hfToken', 'msToken'],
     },
   },
 )

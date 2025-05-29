@@ -214,19 +214,38 @@ const WorkflowSchema = z.discriminatedUnion('backend', [
 ])
 export type Workflow = z.infer<typeof WorkflowSchema>
 
+const globalDefaultSettingsHF = {
+    seed: -1,
+    width: 512,
+    height: 512,
+    inferenceSteps: 6,
+    resolution: '704x384',
+    batchSize: 4,
+    negativePrompt: 'nsfw',
+    imageModel: 'Lykon/dreamshaper-8',
+    inpaintModel: 'Lykon/dreamshaper-8-inpainting',
+    guidanceScale: 7,
+    lora: 'latent-consistency/lcm-lora-sdv1-5',
+    scheduler: 'DPM++ SDE Karras',
+}
+
+const globalDefaultSettingsMS = {
+    seed: -1,
+    width: 512,
+    height: 512,
+    inferenceSteps: 6,
+    resolution: '704x384',
+    batchSize: 4,
+    negativePrompt: 'nsfw',
+    imageModel: 'aiplayground/dreamshaper-8',
+    inpaintModel: 'aiplayground/dreamshaper-8-inpainting',
+    guidanceScale: 7,
+    lora: 'aiplayground/lcm-lora-sdv1-5',
+    scheduler: 'DPM++ SDE Karras',
+}
 const globalDefaultSettings = {
-  seed: -1,
-  width: 512,
-  height: 512,
-  inferenceSteps: 6,
-  resolution: '704x384',
-  batchSize: 4,
-  negativePrompt: 'nsfw',
-  imageModel: 'Lykon/dreamshaper-8',
-  inpaintModel: 'Lykon/dreamshaper-8-inpainting',
-  guidanceScale: 7,
-  lora: 'None',
-  scheduler: 'DPM++ SDE Karras',
+    'huggingface': globalDefaultSettingsHF,
+    'modelscope': globalDefaultSettingsMS
 }
 
 const generalDefaultSettings = {
@@ -239,8 +258,8 @@ const generalDefaultSettings = {
 export const useImageGeneration = defineStore(
   'imageGeneration',
   () => {
-    const predefinedWorkflows: Workflow[] = [
-      {
+    const predefinedWorkflowsHF: Workflow[] = [
+        {
         name: 'Standard',
         backend: 'default',
         tags: ['sd1.5'],
@@ -421,7 +440,192 @@ export const useImageGeneration = defineStore(
         ],
       },
     ]
-
+    const predefinedWorkflowsMS: Workflow[] = [
+        {
+        name: 'Standard',
+        backend: 'default',
+        tags: ['sd1.5'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/dreamshaper-8',
+          inpaintModel: 'aiplayground/dreamshaper-8-inpainting',
+          resolution: '512x512',
+          guidanceScale: 7,
+          inferenceSteps: 20,
+          scheduler: 'DPM++ SDE Karras',
+        },
+        displayedSettings: [
+          'imageModel',
+          'inpaintModel',
+          'guidanceScale',
+          'inferenceSteps',
+          'scheduler',
+        ],
+        modifiableSettings: [
+          'resolution',
+          'seed',
+          'inferenceSteps',
+          'negativePrompt',
+          'batchSize',
+          'imagePreview',
+          'safetyCheck',
+        ],
+      },
+      {
+        name: 'Standard - High Quality',
+        backend: 'default',
+        tags: ['sd1.5', 'hq'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/dreamshaper-8',
+          inpaintModel: 'aiplayground/dreamshaper-8-inpainting',
+          resolution: '512x512',
+          guidanceScale: 7,
+          inferenceSteps: 50,
+          scheduler: 'DPM++ SDE Karras',
+        },
+        displayedSettings: ['imageModel', 'inpaintModel', 'guidanceScale', 'scheduler'],
+        modifiableSettings: [
+          'resolution',
+          'seed',
+          'inferenceSteps',
+          'negativePrompt',
+          'batchSize',
+          'imagePreview',
+          'safetyCheck',
+        ],
+      },
+      {
+        name: 'Standard - Fast',
+        backend: 'default',
+        tags: ['sd1.5', 'fast'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/dreamshaper-8',
+          inpaintModel: 'aiplayground/dreamshaper-8-inpainting',
+          resolution: '704x384',
+          guidanceScale: 1,
+          inferenceSteps: 6,
+          batchSize: 4,
+          scheduler: 'LCM',
+          lora: 'aiplayground/lcm-lora-sdv1-5',
+        },
+        displayedSettings: ['imageModel', 'inpaintModel', 'guidanceScale', 'scheduler', 'lora'],
+        modifiableSettings: [
+          'resolution',
+          'seed',
+          'inferenceSteps',
+          'batchSize',
+          'imagePreview',
+          'safetyCheck',
+        ],
+      },
+      {
+        name: 'HD',
+        backend: 'default',
+        tags: ['sdxl', 'high-vram'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/Juggernaut-XL-v9',
+          inpaintModel: useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL,
+          resolution: '1024x1024',
+          guidanceScale: 7,
+          inferenceSteps: 20,
+          scheduler: 'DPM++ SDE',
+          lora: 'None',
+        },
+        displayedSettings: ['imageModel', 'inpaintModel', 'guidanceScale', 'scheduler'],
+        modifiableSettings: [
+          'resolution',
+          'seed',
+          'inferenceSteps',
+          'negativePrompt',
+          'batchSize',
+          'imagePreview',
+        ],
+      },
+      {
+        name: 'HD - High Quality',
+        backend: 'default',
+        tags: ['sdxl', 'high-vram', 'hq'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/Juggernaut-XL-v9',
+          inpaintModel: useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL,
+          resolution: '1024x1024',
+          guidanceScale: 7,
+          inferenceSteps: 50,
+          scheduler: 'DPM++ SDE',
+          lora: 'None',
+        },
+        displayedSettings: ['imageModel', 'inpaintModel', 'guidanceScale', 'scheduler'],
+        modifiableSettings: [
+          'resolution',
+          'seed',
+          'inferenceSteps',
+          'negativePrompt',
+          'batchSize',
+          'imagePreview',
+        ],
+      },
+      {
+        name: 'HD - Fast',
+        backend: 'default',
+        tags: ['sdxl', 'high-vram', 'fast'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        defaultSettings: {
+          imageModel: 'aiplayground/Juggernaut-XL-v9',
+          inpaintModel: useI18N().state.ENHANCE_INPAINT_USE_IMAGE_MODEL,
+          resolution: '1024x1024',
+          guidanceScale: 1,
+          inferenceSteps: 6,
+          scheduler: 'LCM',
+          lora: 'AI-ModelScope/lcm-lora-sdxl',
+        },
+        displayedSettings: ['imageModel', 'inpaintModel', 'guidanceScale', 'scheduler'],
+        modifiableSettings: ['resolution', 'seed', 'inferenceSteps', 'batchSize', 'imagePreview'],
+      },
+      {
+        name: 'Manual',
+        backend: 'default',
+        tags: ['sd1.5', 'sdxl'],
+        requirements: [],
+        inputs: [],
+        outputs: [{ name: 'output_image', type: 'image' }],
+        displayedSettings: [],
+        modifiableSettings: [
+          'seed',
+          'negativePrompt',
+          'batchSize',
+          'imagePreview',
+          'safetyCheck',
+          'width',
+          'height',
+          'imageModel',
+          'inpaintModel',
+          'inferenceSteps',
+          'guidanceScale',
+          'scheduler',
+          'lora',
+        ],
+      },
+    ]
+    const predefinedWorkflows = computed(():Workflow[] => 
+        globalSetup.modelSource === 'huggingface' ? predefinedWorkflowsHF : predefinedWorkflowsMS
+    )
+    
     const comfyUi = useComfyUi()
     const stableDiffusion = useStableDiffusion()
     const backendServices = useBackendServices()
@@ -431,12 +635,12 @@ export const useImageGeneration = defineStore(
 
     const hdWarningDismissed = ref(false)
 
-    const workflows = ref<Workflow[]>(predefinedWorkflows)
+    const workflows = ref<Workflow[]>(predefinedWorkflows.value)
     const activeWorkflowName = ref<string | null>('Standard - Fast')
     const activeWorkflow = computed(() => {
       console.log('### activeWorkflowName', activeWorkflowName.value)
       return (
-        workflows.value.find((w) => w.name === activeWorkflowName.value) ?? predefinedWorkflows[0]
+        workflows.value.find((w) => w.name === activeWorkflowName.value) ?? predefinedWorkflows.value[0]
       )
     })
     const processing = ref(false)
@@ -447,7 +651,7 @@ export const useImageGeneration = defineStore(
     const seed = ref<number>(generalDefaultSettings.seed)
     const imagePreview = ref<boolean>(generalDefaultSettings.imagePreview)
     const safetyCheck = ref<boolean>(generalDefaultSettings.safetyCheck)
-    const batchSize = ref<number>(globalDefaultSettings.batchSize) // TODO this should be imageCount instead, as we only support batchSize 1 due to memory constraints
+    const batchSize = ref<number>(globalDefaultSettings[globalSetup.modelSource].batchSize) // TODO this should be imageCount instead, as we only support batchSize 1 due to memory constraints
 
     const resetActiveWorkflowSettings = () => {
       prompt.value = generalDefaultSettings.prompt
@@ -459,17 +663,24 @@ export const useImageGeneration = defineStore(
       loadSettingsForActiveWorkflow()
     }
     // model specific settings
-    const negativePrompt = ref<string>(globalDefaultSettings.negativePrompt)
-    const width = ref<number>(globalDefaultSettings.width)
-    const height = ref<number>(globalDefaultSettings.height)
-    const scheduler = ref<string>(globalDefaultSettings.scheduler)
-    const imageModel = ref(globalDefaultSettings.imageModel)
+    const negativePrompt = ref<string>(globalDefaultSettings[globalSetup.modelSource].negativePrompt)
+    const width = ref<number>(globalDefaultSettings[globalSetup.modelSource].width)
+    const height = ref<number>(globalDefaultSettings[globalSetup.modelSource].height)
+    const scheduler = ref<string>(globalDefaultSettings[globalSetup.modelSource].scheduler)
+    const imageModel = ref(globalDefaultSettings[globalSetup.modelSource].imageModel)
     const inpaintModel = ref(
-      activeWorkflow.value.defaultSettings?.inpaintModel ?? globalDefaultSettings.inpaintModel,
+      activeWorkflow.value.defaultSettings?.inpaintModel ?? globalDefaultSettings[globalSetup.modelSource].inpaintModel,
     )
-    const lora = ref<string>(globalDefaultSettings.lora)
-    const guidanceScale = ref<number>(globalDefaultSettings.guidanceScale)
-    const inferenceSteps = ref<number>(globalDefaultSettings.inferenceSteps)
+    const lora = ref(globalDefaultSettings[globalSetup.modelSource].lora)
+    const guidanceScale = ref<number>(globalDefaultSettings[globalSetup.modelSource].guidanceScale)
+    const inferenceSteps = ref<number>(globalDefaultSettings[globalSetup.modelSource].inferenceSteps)
+
+    function refreshModels() {
+        imageModel.value = globalDefaultSettings[globalSetup.modelSource].imageModel
+        inpaintModel.value = activeWorkflow.value.defaultSettings?.inpaintModel ?? globalDefaultSettings[globalSetup.modelSource].inpaintModel
+        lora.value = globalDefaultSettings[globalSetup.modelSource].lora
+    }
+    
     const resolution = computed({
       get() {
         return `${width.value}x${height.value}`
@@ -662,7 +873,7 @@ export const useImageGeneration = defineStore(
         settings[settingName].value =
           saved ??
           activeWorkflow.value?.defaultSettings?.[settingName] ??
-          globalDefaultSettings[settingName]
+          globalDefaultSettings[globalSetup.modelSource][settingName]
       }
 
       getSavedOrDefault('seed')
@@ -707,10 +918,11 @@ export const useImageGeneration = defineStore(
           }
         })
         .filter((wf) => wf !== undefined)
-      workflows.value = [...predefinedWorkflows, ...parsedWorkflows]
+      workflows.value = [...predefinedWorkflows.value, ...parsedWorkflows]
     }
 
     async function getMissingModels(): Promise<DownloadModelParam[]> {
+      refreshModels()
       if (activeWorkflow.value.backend === 'default') {
         return getMissingDefaultBackendModels()
       } else {
@@ -768,7 +980,7 @@ export const useImageGeneration = defineStore(
         (checkModelExistsResult) => !checkModelExistsResult.already_loaded,
       )
       for (const item of modelsToBeLoaded) {
-        if (!(await models.checkIfHuggingFaceUrlExists(item.repo_id))) {
+        if (!(await models.checkIfModelUrlExists(item.repo_id, globalSetup.modelSource))) {
           toast.error(`declared model ${item.repo_id} does not exist. Aborting Generation.`)
           return []
         }
@@ -777,9 +989,12 @@ export const useImageGeneration = defineStore(
     }
 
     async function getMissingDefaultBackendModels(): Promise<DownloadModelParam[]> {
+      
       const checkList: CheckModelAlreadyLoadedParameters[] = [
         { repo_id: imageModel.value, type: Const.MODEL_TYPE_STABLE_DIFFUSION, backend: 'default' },
       ]
+      console.log('imageModel', imageModel.value)   
+
       if (lora.value !== 'None') {
         checkList.push({ repo_id: lora.value, type: Const.MODEL_TYPE_LORA, backend: 'default' })
       }
@@ -796,6 +1011,7 @@ export const useImageGeneration = defineStore(
         })
       }
 
+      console.log('checkList2', checkList)
       const result = await models.checkModelAlreadyLoaded(checkList)
       return result.filter((checkModelExistsResult) => !checkModelExistsResult.already_loaded)
     }
@@ -878,6 +1094,7 @@ export const useImageGeneration = defineStore(
       deleteImage,
       deleteAllImages,
       getGenerationParameters,
+      refreshModels,
     }
   },
   {

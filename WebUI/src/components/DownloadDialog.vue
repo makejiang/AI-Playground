@@ -106,7 +106,7 @@
           >
             <span class="font-bold mx-4">{{ languages.DOWNLOADER_ACCESS_INFO_SINGLE }}</span>
             <span class="text-left">
-              {{ !models.hfTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' }}
+              {{ globalSetup.modelSource === 'modelscope'? !models.msTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' : !models.hfTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' }}
               {{
                 downloadList.some((i) => i.gated) ? languages.DOWNLOADER_GATED_ACCEPT_SINGLE : ''
               }}
@@ -123,7 +123,7 @@
           >
             <span class="font-bold mx-4">{{ languages.DOWNLOADER_ACCESS_INFO }}</span>
             <span class="text-left">
-              {{ !models.hfTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' }}
+              {{ globalSetup.modelSource === 'modelscope'? !models.msTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' : !models.hfTokenIsValid ? languages.DOWNLOADER_GATED_TOKEN : '' }}
               {{ downloadList.some((i) => i.gated) ? languages.DOWNLOADER_GATED_ACCEPT : '' }}
               {{
                 downloadList.some((i) => !i.accessGranted) ? languages.DOWNLOADER_ACCESS_ACCEPT : ''
@@ -282,21 +282,23 @@ async function showConfirmDialog(
   try {
     const sizeResponse = await fetch(`${globalSetup.apiHost}/api/getModelSize`, {
       method: 'POST',
-      body: JSON.stringify(downList),
+      body: JSON.stringify([downList, globalSetup.modelSource]),
       headers: {
         'Content-Type': 'application/json',
       },
     })
     const gatedResponse = await fetch(`${globalSetup.apiHost}/api/isModelGated`, {
       method: 'POST',
-      body: JSON.stringify(downList),
+      body: JSON.stringify([downList, globalSetup.modelSource]),
       headers: {
         'Content-Type': 'application/json',
       },
     })
+
+    const token = globalSetup.modelSource === 'modelscope' ? models.msToken : models.hfToken
     const accessResponse = await fetch(`${globalSetup.apiHost}/api/isAccessGranted`, {
       method: 'POST',
-      body: JSON.stringify([downList, models.hfToken]),
+      body: JSON.stringify([downList, token, globalSetup.modelSource]),
       headers: {
         'Content-Type': 'application/json',
       },
@@ -313,6 +315,7 @@ async function showConfirmDialog(
       item.gated = gatedData.gatedList[item.repo_id] || false
       item.accessGranted = accessData.accessList[item.repo_id] || false
     }
+    console.log(downloadList.value)
     sizeRequesting.value = false
   } catch (ex) {
     fail?.({ type: 'error', error: ex })
@@ -374,12 +377,21 @@ function download() {
   completeCount.value = 0
   abortController = new AbortController()
   curDownloadTip.value = ''
+  
+  let author = {}
+  if (globalSetup.modelSource === 'modelscope') {
+    author = models.msTokenIsValid ? { Authorization: `Bearer ${models.msToken}` } : {}
+  } else {
+    author = models.hfTokenIsValid ? { Authorization: `Bearer ${models.hfToken}` } : {}
+  }
+
+
   fetch(`${globalSetup.apiHost}/api/downloadModel`, {
     method: 'POST',
-    body: JSON.stringify(toRaw({ data: accessableDownloadList })),
+    body: JSON.stringify(toRaw({ data: accessableDownloadList, source: globalSetup.modelSource })),
     headers: {
       'Content-Type': 'application/json',
-      ...(models.hfTokenIsValid ? { Authorization: `Bearer ${models.hfToken}` } : {}),
+      ...author,
     },
     signal: abortController.signal,
   })

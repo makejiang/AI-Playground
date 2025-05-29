@@ -43,7 +43,10 @@
       class="flex-auto h-0 flex flex-col gap-5 pt-3 border-t border-color-spilter overflow-y-auto"
     >
       <div class="px-3 flex-none flex flex-col gap-3">
-        <SettingsModel @show-download-model-confirm="showDownloadModelConfirm"></SettingsModel>
+        <SettingsModel 
+          @show-download-model-confirm="showDownloadModelConfirm"
+          @show-warning="showWarning"
+        ></SettingsModel>
       </div>
     </div>
   </div>
@@ -63,6 +66,11 @@ const emits = defineEmits<{
     success?: () => void,
     fail?: () => void,
   ): void
+  (
+    e: 'showWarning', 
+    warning: string, 
+    func: () => void
+  ): void
   (e: 'close'): void
 }>()
 
@@ -72,5 +80,9 @@ function showDownloadModelConfirm(
   _fail?: () => void,
 ) {
   emits('showDownloadModelConfirm', downList)
+}
+
+function showWarning(warning: string, func: () => void) {
+  emits('showWarning', warning, func)
 }
 </script>

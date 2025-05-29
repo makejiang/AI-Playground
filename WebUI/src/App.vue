@@ -172,6 +172,7 @@
         v-show="showSetting"
         @close="hideAppSettings"
         @show-download-model-confirm="showDownloadModelConfirm"
+        @show-warning="showWarning"
       ></app-settings>
     </div>
     <download-dialog

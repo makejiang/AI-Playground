@@ -11,7 +11,7 @@ import utils
 
 app = APIFlask(__name__)
 llm_backend = LlamaCpp()
-embedding_model = LlamaCppEmbeddingModel()
+embedding_model = None
 
 @app.get("/health")
 def health():
@@ -42,10 +42,15 @@ def stop_llm_generate():
 
 @app.route('/v1/embeddings', methods=['POST'])
 def embeddings():
+    global embedding_model
     data = request.json
 
     encoding_format = data.get('encoding_format', 'float')
     input_data = data.get('input', None)
+
+    if embedding_model is None:
+        model_id = data.get('model', 'ChristianAzinn/bge-small-en-v1.5-gguf')
+        embedding_model = LlamaCppEmbeddingModel(model_id)
 
     if not input_data:
         return jsonify({"error": "Input text is required"}), 400

@@ -10,7 +10,7 @@ import utils
 
 app = APIFlask(__name__)
 llm_backend = OpenVino()
-embedding_model = OpenVINOEmbeddingModel()
+embedding_model = None
 
 @app.get("/health")
 def health():
@@ -49,11 +49,16 @@ def stop_llm_generate():
 
 @app.route('/v1/embeddings', methods=['POST'])
 def embeddings():
+    global embedding_model
     data = request.json
-    
+
     encoding_format = data.get('encoding_format', 'float')
     input_data = data.get('input', None)
 
+    if embedding_model is None:
+        model_id = data.get('model', 'EmbeddedLLM/bge-m3-int4-sym-ov')
+        embedding_model = OpenVINOEmbeddingModel(model_id)
+            
     if not input_data:
         return jsonify({"error": "Input text is required"}), 400
 

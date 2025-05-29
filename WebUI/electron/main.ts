@@ -113,8 +113,17 @@ async function loadSettings() {
     })
   }
   appLogger.info(`settings loaded: ${JSON.stringify({ settings })}`, 'electron-backend')
-
   return settings
+}
+
+async function saveSettings(key: string, value: any) {
+  const settingPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'settings.json')
+    : path.join(__dirname, '../../external/settings-dev.json')
+  settings[key] = value
+  appLogger.info(`saving settings to ${settingPath}`, 'electron-backend')
+  fs.writeFileSync(settingPath, JSON.stringify(settings, null, 2), { encoding: 'utf8' })
+  appLogger.info(`settings saved: ${JSON.stringify({ settings })}`, 'electron-backend')
 }
 
 async function createWindow() {
@@ -444,6 +453,13 @@ function initEventHandle() {
     }
   })
 
+  ipcMain.on('restartApp', async () => {
+    if (win) {
+      appLogger.info('Restarting app', 'electron-backend')
+      win.reload()
+    }
+  })
+
   ipcMain.on('saveImage', async (event: IpcMainEvent, url: string) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) {
@@ -520,6 +536,7 @@ function initEventHandle() {
       modelPaths: pathsManager.modelPaths,
       isAdminExec: settings.isAdminExec,
       version: app.getVersion(),
+      modelSource: settings.modelSource,
     }
   })
 
@@ -752,6 +769,7 @@ function initEventHandle() {
       shell.showItemInFolder(imagePath)
     }
   })
+  
 }
 
 ipcMain.on(

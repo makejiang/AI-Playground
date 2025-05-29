@@ -4,6 +4,7 @@ import { useBackendServices } from './backendServices'
 import { useModels } from './models'
 import * as Const from '@/assets/js/const'
 import { Document } from 'langchain/document'
+import { useGlobalSetup } from './globalSetup'
 
 export const llmBackendTypes = ['openVINO', 'ipexLLM', 'llamaCPP'] as const
 
@@ -49,6 +50,7 @@ export const useTextInference = defineStore(
     const models = useModels()
     const backend = ref<LlmBackend>('openVINO')
     const ragList = ref<IndexedDocument[]>([])
+    const globalSetup = useGlobalSetup()
 
     const selectedModels = ref<LlmBackendKV>({
       ipexLLM: null,
@@ -64,7 +66,7 @@ export const useTextInference = defineStore(
 
     const llmModels: Ref<LlmModel[]> = computed(() => {
       const llmTypeModels = models.models.filter((m) =>
-        ['ipexLLM', 'llamaCPP', 'openVINO'].includes(m.type),
+        ['ipexLLM', 'llamaCPP', 'openVINO'].includes(m.type) && (!m.source || m.source?.includes(globalSetup.modelSource)),
       )
       const newModels = llmTypeModels.map((m) => {
         const selectedModelForType = selectedModels.value[m.type as LlmBackend]
@@ -82,7 +84,7 @@ export const useTextInference = defineStore(
     })
 
     const llmEmbeddingModels: Ref<LlmModel[]> = computed(() => {
-      const llmEmbeddingTypeModels = models.models.filter((m) => m.type === 'embedding')
+      const llmEmbeddingTypeModels = models.models.filter((m) => m.type === 'embedding' && (!m.source || m.source?.includes(globalSetup.modelSource)))
       console.log('llmEmbeddingTypeModels', llmEmbeddingTypeModels)
       const newEmbeddingModels = llmEmbeddingTypeModels.map((m) => {
         const selectedEmbeddingModelForType = selectedEmbeddingModels.value[m.backend as LlmBackend]

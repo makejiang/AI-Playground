@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('envVars', {
   platformTitle: import.meta.env.VITE_PLATFORM_TITLE,
   debugToolsEnabled: import.meta.env.VITE_DEBUG_TOOLS === 'true',
   productVersion: pkg.version,
+  modelSource: import.meta.env.VITE_MODEL_SOURCE,
 })
 contextBridge.exposeInMainWorld('electronAPI', {
   getFilePath: (file: File) => webUtils.getPathForFile(file),
@@ -39,6 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setIgnoreMouseEvents: (igrnore: boolean) => ipcRenderer.send('setIgnoreMouseEvents', igrnore),
   miniWindow: () => ipcRenderer.send('miniWindow'),
   exitApp: () => ipcRenderer.send('exitApp'),
+  restartApp: () => ipcRenderer.send('restartApp'),
   getMediaUrlBase: () => ipcRenderer.invoke('getMediaUrlBase'),
   showOpenDialog: (options: Electron.OpenDialogOptions) =>
     ipcRenderer.invoke('showOpenDialog', options),
