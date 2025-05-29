@@ -648,6 +648,7 @@ def get_oem_info():
             oem_data = json.load(f)
         
         oem_name = oem_data.get('name', '')
+        oem_name_cn = oem_data.get('name_cn', '')
         app_list = oem_data.get('apps', [])
         
         # Process each app
@@ -673,6 +674,7 @@ def get_oem_info():
         # Construct the final result
         result = {
             "name": oem_name,
+            "name_cn": oem_name_cn,
             "apps": apps_info
         }        
         return json.dumps(result, ensure_ascii=False)

@@ -210,7 +210,7 @@
     }"
   >
     <div>
-      <p>
+    <!--   <p>
         Al Playground from Intel Corporation
         <a href="https://github.com/intel/ai-playground" target="_blank" class="text-blue-500"
           >https://github.com/intel/ai-playground</a
@@ -241,15 +241,16 @@
         >
           | Licenses</a
         >
-      </p>
+      </p>  -->
     </div>
     <div v-if="theme.active === 'lnl'" class="flex gap-2 items-center">
-      <p class="text-gray-300 text-lg mr-2">Powered by</p>
+      <p class="text-gray-300 text-lg mr-2">Support</p>
       <img class="size-20" src="@/assets/image/core_ultra_badge.png" />
       <img class="size-20" src="@/assets/image/arc_graphics_badge.png" />
     </div>
     <div v-if="theme.active === 'bmg'" class="flex gap-2 items-center">
-      <p class="text-gray-300 text-lg mr-2">Powered by</p>
+      <p class="text-gray-300 text-lg mr-2">Support</p>
+      <img class="size-20" src="@/assets/image/core_ultra_badge.png" />
       <img class="size-20" src="@/assets/image/arc_graphics_badge.png" />
     </div>
     <img v-else-if="theme.active === 'dark'" src="@/assets/svg/intel.svg" />

@@ -14,11 +14,12 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useGlobalSetup } from '@/assets/js/store/globalSetup'
 import CardComp from '@/components/CardApp.vue'
+import { useI18N } from '@/assets/js/store/i18n'
 import { emitter } from '@/assets/js/util.ts'
 import type { App } from '@/components/CardApp.vue'
 
 const globalSetup = useGlobalSetup()
-
+const i18n = useI18N()
 const oemName = ref<string>('OEM')
 
 const apps = reactive<App[]>([{
@@ -56,8 +57,12 @@ const refreshApps = async (): Promise<void> => {
         }
 
         const oemAppInfo = await response.json()
-        oemName.value = oemAppInfo.name
-        
+        console.log('Language:', i18n.langName, i18n.currentLanguageName)
+        console.log('OEM App Info:', oemAppInfo)
+
+        // Set OEM name based on current language
+        oemName.value = i18n.langName === 'zh-CN' ? oemAppInfo.name_cn : oemAppInfo.name
+
         for (const app of oemAppInfo.apps) {
             apps.push(app)
         }
