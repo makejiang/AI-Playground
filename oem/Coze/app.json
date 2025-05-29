@@ -1,0 +1,11 @@
+{
+    "name": "Coze",
+    "nameCN": "扣子",
+    "tags": ["工作流", "AI", "效率", "助手"],
+    "iconUrl": "logo.coze.png",
+    "homeUrl": "https://www.smfyun.com/",
+    "installer": "Intel-AIPC-Agent-Setup.exe",
+    "processname": "Intel-AIPC-Agent.exe",
+    "installedname": "Intel-AIPC-Agent",
+    "uninstallProcessName": ""
+}

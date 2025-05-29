@@ -135,6 +135,9 @@
   </main>
   <main v-show="globalSetup.loadingState === 'running'" class="flex-auto flex flex-col relative">
     <div class="main-tabs flex-none pt-2 px-3 flex items-end justify-start gap-1 text-gray-400">
+      <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
+        {{ languages.TAB_ISV_APPS }}
+      </button>
       <button class="tab" :class="{ active: activeTabIdx == 0 }" @click="switchTab(0)">
         {{ languages.TAB_CREATE }}
       </button>
@@ -144,7 +147,7 @@
       <button class="tab" :class="{ active: activeTabIdx == 2 }" @click="switchTab(2)">
         {{ languages.TAB_ANSWER }}
       </button>
-      <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
+      <button class="tab" :class="{ active: activeTabIdx == 4 }" @click="switchTab(4)">
         {{ languages.TAB_LEARN_MORE }}
       </button>
       <span class="main-tab-glider tab absolute" :class="{ [`pos-${activeTabIdx}`]: true }"></span>
@@ -167,7 +170,12 @@
         @show-download-model-confirm="showDownloadModelConfirm"
         @show-model-request="showModelRequest"
       ></answer>
-      <learn-more v-show="activeTabIdx == 3"></learn-more>
+      <oem-bundle-a
+        v-show="activeTabIdx == 3"
+      ></oem-bundle-a>
+      <learn-more 
+        v-show="activeTabIdx == 4"
+      ></learn-more>
       <app-settings
         v-show="showSetting"
         @close="hideAppSettings"
@@ -249,11 +257,13 @@
 </template>
 
 <script setup lang="ts">
+import { emitter } from '@/assets/js/util'
 import LoadingBar from './components/LoadingBar.vue'
 import InstallationManagement from './components/InstallationManagement.vue'
 import Create from './views/Create.vue'
 import Enhance from './views/Enhance.vue'
 import Answer from './views/Answer.vue'
+import OemBundleA from './views/OemBundleA.vue'
 import LearnMore from './views/LearnMore.vue'
 import AppSettings from './views/AppSettings.vue'
 import './assets/css/index.css'
@@ -279,7 +289,7 @@ const warningCompt = ref<InstanceType<typeof WarningDialog>>()
 const showSettingBtn = ref<HTMLButtonElement>()
 
 const isOpen = ref(false)
-const activeTabIdx = ref(0)
+const activeTabIdx = ref(3)
 const showSetting = ref(false)
 const showDowloadDlg = ref(false)
 const showModelRequestDialog = ref(false)
@@ -329,6 +339,7 @@ async function setInitalLoadingState() {
     if (result.allServicesStarted) {
       await globalSetup.initSetup()
       globalSetup.loadingState = 'running'
+      emitter.emit('backendReady')
       return
     }
   }

@@ -1,0 +1,11 @@
+{
+    "name": "AIPCMeeting",
+    "nameCN": "AIPC会议大师",
+    "tags": ["智能", "办公", "语音", "字幕"],
+    "iconUrl": "logo.rsmeet.png",
+    "homeUrl": "https://mm.raisound.com/index",
+    "installer": "RSMeetingMaster-1.0.6-win32-x64-release.exe",
+    "processname": "AI PC会议大师.exe",
+    "installedname": "RSMeetingMaster",
+    "uninstallProcessName": "Un.exe"
+}

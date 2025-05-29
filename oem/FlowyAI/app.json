@@ -1,0 +1,11 @@
+{
+    "name": "FlowyAI",
+    "nameCN": "FlowyAIPC助手",
+    "tags": ["生产力", "AI", "安全", "娱乐"],
+    "iconUrl": "logo.flowy.png",
+    "homeUrl": "https://www.flowyaipc.com/",
+    "installer": "FlowyAIPC-2.2.1-win-x64-setup.exe",
+    "processname": "FlowyAIPC.exe",
+    "installedname": "FlowyAIPC",
+    "uninstallProcessName": "Un_A.exe"
+}

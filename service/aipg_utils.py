@@ -87,3 +87,27 @@ def call_subprocess(process_command: str, cwd: Optional[str] = None) -> str:
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to call subprocess {process_command} with error {e}")
         raise e
+
+
+def get_country_code():
+    """
+    Get the country code for the current IP address using ipgeolocation.io API.
+    
+    Returns:
+        JSON response with country code and other location information.
+    """
+    try:
+        api_key = "99db47e830a6454595c33bdda53f75e5"
+        url = f"https://api.ipgeolocation.io/v2/ipgeo?apiKey={api_key}"
+        
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            logging.info(f"Country code: {data}")
+            return data["location"]["country_code2"]
+        else:
+            return None
+    except Exception as e:
+        logging.error(f"Error fetching country code: {e}")
+        return None
+

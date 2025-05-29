@@ -1,0 +1,11 @@
+{
+    "name": "AIPPT",
+    "nameCN": "AIPPT",
+    "tags": ["PPT", "办公", "AI", "模板"],
+    "iconUrl": "logo.aippt.png",
+    "homeUrl": "https://www.smfyun.com/",
+    "installer": "aipc-electron-1.0.0-setup.exe",
+    "processname": "AiPPT.exe",
+    "installedname": "AiPPT",
+    "uninstallProcessName": "Un_A.exe"
+}
