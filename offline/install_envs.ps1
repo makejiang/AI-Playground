@@ -28,7 +28,7 @@ $form.ControlBox = $false
 
 # add a label
 $label = New-Object System.Windows.Forms.Label
-$label.Text = "Please select the environment to install:"
+$label.Text = "Please select backends to install:"
 $label.Location = New-Object System.Drawing.Point(20, 20)
 $label.Size = New-Object System.Drawing.Size(250, 20)
 $form.Controls.Add($label)
@@ -56,6 +56,7 @@ $form.Controls.Add($checkboxov)
 $checkboxlc = New-Object System.Windows.Forms.CheckBox
 $checkboxlc.Text = "LlamaCPP"
 $checkboxlc.Location = New-Object System.Drawing.Point(20, 110)
+$checkboxlc.visible = $false # hide this checkbox for now
 $form.Controls.Add($checkboxlc)
 
 $button = New-Object System.Windows.Forms.Button

@@ -58,6 +58,7 @@
         <radio-block
           :checked="imageGeneration.backend === 'comfyui'"
           :text="languages.SETTINGS_IMAGE_WORKFLOW"
+          :disabled="true"
           @click="
             () => {
               onSwitchToComfyUI()

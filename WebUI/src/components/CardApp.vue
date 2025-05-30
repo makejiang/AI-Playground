@@ -65,6 +65,8 @@ import * as toast from '@/assets/js/toast'
 
 const globalSetup = useGlobalSetup()
 
+type AppStatus = 'not-installed' | 'installing' | 'installed' | 'running' | 'uninstalling' | 'not-supported'
+
 interface App {
     name: string
     nameCN: string
@@ -75,13 +77,12 @@ interface App {
     installer: string
     processname: string
     installedname: string
+    status: AppStatus
 }
-
-type AppStatus = 'not-installed' | 'installing' | 'installed' | 'running' | 'uninstalling' | 'not-supported'
 
 interface Props {
     app: App
-    status?: AppStatus
+    //status?: AppStatus
     progress?: number
     labelId?: string
 }
@@ -96,16 +97,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Reactive state
-const status = ref<AppStatus>(props.status)
+const status = ref<AppStatus>(props.app.status)
 const isRefreshing = ref<boolean>(false)
 
 // Watch for prop changes
-watch(() => props.status, (newStatus) => {
+watch(() => props.app.status, (newStatus) => {
     status.value = newStatus
 })
-
-// Timeout reference
-let fetchStatusTimeout: number | null = null
 
 // API request helper
 const createRequestParams = () => ({
@@ -273,13 +271,6 @@ const refreshAppStatus = async (): Promise<void> => {
     }
 }
 
-const clearFetchStatusTimeout = (): void => {
-    if (fetchStatusTimeout !== null) {
-        clearTimeout(fetchStatusTimeout)
-        fetchStatusTimeout = null
-    }
-}
-
 // Computed functions for UI
 const mapStatus = (currentStatus: AppStatus): string => {
     const statusMap: Record<AppStatus, string> = {
@@ -336,7 +327,7 @@ const statusColor = (currentStatus: AppStatus): string => {
 onMounted(() => {
     console.log('CardApp mounted', props.app.name)
     if (!isRefreshing.value) {
-        fetchAppStatus()
+        //fetchAppStatus()
     }
 })
 

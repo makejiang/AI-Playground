@@ -233,7 +233,7 @@ Get-Ipex2Cuda
 
 Get-Wheels-AI-Backend
 Get-Wheels-OpenVINO
-Get-Wheels-LlamaCPP
+# Get-Wheels-LlamaCPP
 
 Get-ComfyUI
 Get-Wheels-ComfyUI

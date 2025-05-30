@@ -421,7 +421,7 @@
             @change="(item) => (textInference.backend = item as LlmBackend)"
             :value="textInference.backend"
             :items="
-              [...llmBackendTypes].map((item) => ({
+              [...workingBackends].map((item) => ({
                 label: textInferenceBackendDisplayName[item],
                 value: item,
                 active: isRunning(item),
@@ -671,6 +671,7 @@ const isHistoryVisible = ref(false)
 const currentlyGeneratingKey = ref<string | null>(null)
 const showScrollButton = ref(false)
 const autoScrollEnabled = ref(true)
+const workingBackends = ['openVINO'] as LlmBackend[]
 
 onMounted(async () => {
   chatPanel = document.getElementById('chatPanel')!

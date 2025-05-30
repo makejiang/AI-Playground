@@ -4,8 +4,15 @@
         <div class="disclaimer">
             * {{ languages.ISVAPP_DESCRIPTION }}
         </div>
-        <div class="app-grid">
-            <CardComp v-for="(app, index) in apps" :key="index" :app="app" />
+        
+        <!-- Loading Animation -->
+        <div v-if="isLoading" class="loading-container">
+            <loading-bar style="word-spacing: 6px" :text="languages.ISVAPP_LOADING || 'Loading...'" class="w-2/5"/>
+        </div>
+        
+        <!-- App Grid -->
+        <div v-else class="app-grid">
+            <CardComp v-for="(app, index) in apps" :key="index" :app="app" :status="app.status" />
         </div>
     </div>
 </template>
@@ -14,26 +21,18 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useGlobalSetup } from '@/assets/js/store/globalSetup'
 import CardComp from '@/components/CardApp.vue'
+import LoadingBar from '@/components/LoadingBar.vue'
 import { useI18N } from '@/assets/js/store/i18n'
 import { emitter } from '@/assets/js/util.ts'
 import type { App } from '@/components/CardApp.vue'
 
 const globalSetup = useGlobalSetup()
 const i18n = useI18N()
+const languages = i18n.state
 const oemName = ref<string>('OEM')
+const isLoading = ref<boolean>(true)
 
-const apps = reactive<App[]>([{
-    name: '',
-    nameCN: '',
-    tags: [],
-    iconUrl: '',
-    iconData: '',
-    homeUrl: '',
-    installer: '',
-    processname: '',
-    installedname: '',
-}])
-
+const apps = reactive<App[]>([])
 
 
 emitter.on('backendReady', () => {
@@ -43,6 +42,7 @@ emitter.on('backendReady', () => {
 
 const refreshApps = async (): Promise<void> => {
     try {
+        isLoading.value = true
         // Clear existing apps
         apps.splice(0)
         
@@ -68,6 +68,8 @@ const refreshApps = async (): Promise<void> => {
         }
     } catch (error) {
         console.error('Failed to refresh apps:', error)
+    } finally {
+        isLoading.value = false
     }
 }
 
@@ -86,14 +88,19 @@ const refreshApps = async (): Promise<void> => {
         font-weight: bold;
         margin-bottom: 5px;
         color: white;
-    }
-
-    .disclaimer {
+    }    .disclaimer {
         font-size: 14px;
         margin-bottom: 50px;
         color: white;
     }
     
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+        width: 100%;
+    }
     
   .title {
     font-size: 30px;

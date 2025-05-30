@@ -66,7 +66,7 @@ export const useTextInference = defineStore(
 
     const llmModels: Ref<LlmModel[]> = computed(() => {
       const llmTypeModels = models.models.filter((m) =>
-        ['ipexLLM', 'llamaCPP', 'openVINO'].includes(m.type) && (!m.source || m.source?.includes(globalSetup.modelSource)),
+        ['openVINO'].includes(m.type) && (!m.source || m.source?.includes(globalSetup.modelSource)),
       )
       const newModels = llmTypeModels.map((m) => {
         const selectedModelForType = selectedModels.value[m.type as LlmBackend]

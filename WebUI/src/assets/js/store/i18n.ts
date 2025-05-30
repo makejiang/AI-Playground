@@ -38,6 +38,7 @@ export const useI18N = defineStore('i18n', () => {
       } else {
         // fallback to en-US
         langName.value = 'en-US'
+        
       }
     }
   })

@@ -92,6 +92,10 @@
     {
       "from": "../oem",
       "to": "oem"
+    },
+    {
+      "from": "build/delete-extra.bat",
+      "to": "delete-extra.bat"
     }
   ],
   "productName": "AI Playground",

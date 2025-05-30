@@ -4,6 +4,7 @@ import time
 import psutil
 import shlex
 import threading
+import win32api, win32con
 from . import winutils
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -37,12 +38,24 @@ class app:
         logger.info(f"Installing {app_name} with stream mode...")
         
         # get the path of this script
-        path_installer = os.path.join(winutils.get_download_folder(), "_aipg_apps", installer)
-        if not os.path.exists(path_installer):
+        path_installer = winutils.get_installer_path(installer)
+        if not path_installer:
             return 'data:{"state":"not-installed", "message":"Can not find the installer"}\0'
 
         logger.info(f"calling cmd process: {path_installer}")
-        subprocess.Popen([path_installer], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # subprocess.Popen([path_installer], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            win32api.ShellExecute(
+                0, 
+                "runas", 
+                path_installer, 
+                None, 
+                None, 
+                win32con.SW_SHOWNORMAL
+            )
+        except Exception as e:
+            logger.error(f"Failed to launch installer with admin privileges: {e}")
+            return 'data:{"state":"not-installed", "message":"Installation failed, could not start installer"}\0'
         #if ret:
         #    threading.Thread(target=self.__report_process_running, kwargs={"process_name": installer, "installed_name": installed_name}).start()
         return self.__report_install_process(installer, installed_name)
@@ -149,21 +162,41 @@ class app:
         
         cmds = shlex.split(path_uninstall)
 
-        # restore "Program-Files" to "Program Files"
-        if len(cmds) > 1:
-            cmds[0] = cmds[0].replace("Program-Files-(x86)", "Program Files (x86)")
-            cmds[0] = cmds[0].replace("Program-Files", "Program Files")
-            
-            subprocess.Popen(cmds, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            path_uninstall = path_uninstall.replace("Program-Files-(x86)", "Program Files (x86)")
-            path_uninstall = path_uninstall.replace("Program-Files", "Program Files")
-            
-            # remove '"' at the begin and end if exists
-            if path_uninstall.startswith('"') and path_uninstall.endswith('"'):
-                path_uninstall = path_uninstall[1:-1]
+        try:
+            # restore "Program-Files" to "Program Files"
+            if len(cmds) > 1:
+                cmds[0] = cmds[0].replace("Program-Files-(x86)", "Program Files (x86)")
+                cmds[0] = cmds[0].replace("Program-Files", "Program Files")
+                
+                # subprocess.Popen(cmds, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                win32api.ShellExecute(
+                    0, 
+                    "runas", 
+                    cmds[0], 
+                    ' '.join(cmds[1:]), # parameters are passed as a list 
+                    None, 
+                    win32con.SW_SHOWNORMAL
+                )
+            else:
+                path_uninstall = path_uninstall.replace("Program-Files-(x86)", "Program Files (x86)")
+                path_uninstall = path_uninstall.replace("Program-Files", "Program Files")
+                
+                # remove '"' at the begin and end if exists
+                if path_uninstall.startswith('"') and path_uninstall.endswith('"'):
+                    path_uninstall = path_uninstall[1:-1]
 
-            subprocess.Popen([path_uninstall], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # subprocess.Popen([path_uninstall], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                win32api.ShellExecute(
+                    0, 
+                    "runas", 
+                    path_uninstaller, 
+                    None, 
+                    None, 
+                    win32con.SW_SHOWNORMAL
+                )
+        except Exception as e:
+            logger.error(f"Failed to launch uninstaller with admin privileges: {e}")
+            return 'data:{"state":"installed", "message":"Uninstallation failed, could not start uninstaller"}\0'
 
         if uninstall_process_name:
             return self.__report_uninstall_process(installed_name, uninstall_process_name)

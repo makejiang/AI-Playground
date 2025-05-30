@@ -28,27 +28,33 @@
 
     ; check the file ap-envs-package-$version.7z exists
     ;MessageBox MB_OK "offline package path: $EXEDIR\ap-offline-pkg-${VERSION}.7z"
-    IfFileExists "$EXEDIR\ap-offline-pkg-${VERSION}.7z" envs 0
+    IfFileExists "$EXEDIR\ap-offline-pkg-${VERSION}.7z" backends 0
 
-    envs:
-        DetailPrint "Extracting offline resource..."
+    backends:
+        DetailPrint "Extracting offline backends..."
         nsExec::ExecToLog '"$INSTDIR\resources\7zr.exe" x "$EXEDIR\ap-offline-pkg-${VERSION}.7z" -o"$EXEDIR\_ap_offline"'
 
         Pop $0
         ${if} $0 == 0
-          Goto install_envs
+          Goto install_backends
         ${endIf}
         
         ;DetailPrint "Installing python environment..."
         ;nsExec::ExecToLog 'powershell -ExecutionPolicy ByPass -File "$INSTDIR\resource\offline\install_envs.ps1" "$INSTDIR"'
     
-    install_envs:
-        DetailPrint "Installing offline resource..."
+    install_backends:
+        DetailPrint "Installing offline backends..."
         ;Show a component selection dialog here
         nsExec::Exec 'powershell -WindowStyle Normal -ExecutionPolicy ByPass "$EXEDIR\_ap_offline\install_envs.ps1" "$INSTDIR"'
         ; Remove the temporary offline package
         RMDir /r "$EXEDIR\_ap_offline"
         
+    ; check the file oem-isv-apps.7z exists
+    IfFileExists "$EXEDIR\oem-isv-apps-${VERSION}.7z" apps 0
+    
+    apps:
+        DetailPrint "Extracting oem apps..."
+        nsExec::ExecToLog '"$INSTDIR\resources\7zr.exe" x "$EXEDIR\oem-isv-apps-${VERSION}.7z" -o"$INSTDIR\resources"'
 
     ; restore the backup model files
     StrCpy $0 "$INSTDIR"
@@ -110,6 +116,12 @@
 
   deleteAll:
     ; If the user clicked "No", delete the entire installation directory
+    DetailPrint "Removing backends' files..."
+    Push $OUTDIR
+    SetOutPath "$INSTDIR\resources"
+    Execwait '"$INSTDIR\resources\delete-extra.bat"'
+    Pop $OUTDIR
+
     DetailPrint "Removing existing files..."
     RMDir /r "$INSTDIR"
 

@@ -48,6 +48,18 @@ def get_download_folder():
         print(f"Error accessing registry: {e}")
         return None
 
+def get_installer_path(installer_name: str):
+    installer_path = os.path.join(get_download_folder(), "_aipg_apps", installer_name)
+    if os.path.exists(installer_path):
+        return installer_path
+    
+    # get path of working directory's parent directory
+    installer_path = os.path.join(os.path.dirname(os.getcwd()), "_aipg_apps", installer_name)
+    if os.path.exists(installer_path):
+        return installer_path
+
+    return None
+
 def is_window_running(win_title):
     try:
         ret = win32gui.FindWindow(None, win_title)

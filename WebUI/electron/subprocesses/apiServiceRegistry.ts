@@ -126,14 +126,14 @@ export async function aiplaygroundApiServiceRegistry(
         settings,
       ),
     )
-    instance.register(
-      new LlamaCppBackendService(
-        'llamacpp-backend',
-        await getPort({ port: portNumbers(39000, 39999) }),
-        win,
-        settings,
-      ),
-    )
+    // instance.register(
+    //   new LlamaCppBackendService(
+    //     'llamacpp-backend',
+    //     await getPort({ port: portNumbers(39000, 39999) }),
+    //     win,
+    //     settings,
+    //   ),
+    // )
   }
   return instance
 }

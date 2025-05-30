@@ -154,6 +154,7 @@
   "ANSWER_ERROR_NOT_PROMPT": "请输入您的问题",
   "ANSWER_ERROR_CLEAR_SESSION": "清空聊天记录",
   "ISVAPP_TITLE": "精选AI应用",
+  "ISVAPP_LOADING": "正在检查AI应用",
   "ISVAPP_DESCRIPTION": "精选AI应用深度适配的软件应用程序，配合 Intel 酷睿 Ultra 处理器和 Intel Arc 显卡获取最佳使用体验。",
   "INCREASE_FONT_SIZE": "增大字体",
   "DECREASE_FONT_SIZE": "减小字体",

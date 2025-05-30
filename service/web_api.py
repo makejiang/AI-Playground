@@ -659,15 +659,26 @@ def get_oem_info():
             try:
                 # Read the app JSON file
                 with open(app_json_path, 'r', encoding='utf-8') as f:
-                    app_data = json.load(f)
+                    app_info = json.load(f)
                 
                 # Update the iconUrl to include the full path
-                if 'iconUrl' in app_data and not app_data['iconUrl'].startswith('/'):
-                    app_data['iconUrl'] = os.path.join(oem_dir, app_name, app_data['iconUrl'])
+                if 'iconUrl' in app_info and not app_info['iconUrl'].startswith('/'):
+                    app_info['iconUrl'] = os.path.join(oem_dir, app_name, app_info['iconUrl'])
                 
-                # add iconData in app_data
-                app_data['iconData'] = base64.b64encode(open(app_data['iconUrl'], 'rb').read()).decode('utf-8')
-                apps_info.append(app_data)
+                # add iconData in app_info
+                app_info['iconData'] = base64.b64encode(open(app_info['iconUrl'], 'rb').read()).decode('utf-8')
+
+                # add app status
+                app_info['status'] = 'not-installed'
+                app_op = isvapps.get(app_info['name'], None)
+                if app_op:
+                    if app_op.is_running(app_info['processname']):
+                        app_info['status'] = 'running'
+
+                    if app_op.is_installed(app_info['installedname']):
+                        app_info['status'] = 'installed'
+
+                apps_info.append(app_info)
             except Exception as e:
                 logging.error(f"Error reading app JSON for {app_name}: {e}")
         
@@ -682,9 +693,6 @@ def get_oem_info():
     except Exception as e:
         logging.error(f"Error in getOemApps: {e}")
         return json.dumps({"name": "", "apps": []}, ensure_ascii=False)
-
-
-
 
 
 if __name__ == "__main__":
