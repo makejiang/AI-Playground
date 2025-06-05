@@ -41,6 +41,7 @@ export class ApiServiceRegistryImpl implements ApiServiceRegistry {
   }
 
   async bootUpAllSetUpServices(): Promise<{ serviceName: string; state: BackendStatus }[]> {
+    appLoggerInstance.info(`bootup all services`, 'apiServiceRegistry')
     const setUpServices = this.registeredServices.filter((item) => item.isSetUp)
     return Promise.all(
       setUpServices.map((service) =>

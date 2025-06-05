@@ -34,43 +34,42 @@ const isLoading = ref<boolean>(true)
 
 const apps = reactive<App[]>([])
 
-
-emitter.on('backendReady', () => {
-    console.log('backendReady event received')
+emitter.on('aiBackendReady', () => {
+    console.log('aiBackendReady event received')
     refreshApps()
 })
 
 const refreshApps = async (): Promise<void> => {
-    try {
-        isLoading.value = true
-        // Clear existing apps
-        apps.splice(0)
-        
-        // Get OEM info from API
-        const response = await fetch(`${globalSetup.apiHost}/api/app/getOemAppInfo`, {
-            method: 'POST'
-        })
-        
-        if (!response.ok) {
-            console.error('Failed to fetch OEM info:', response.statusText)
-            return
-        }
+  try {
+    
+    // Get OEM info from API
+    const response = await fetch(`${globalSetup.apiHost}/api/app/getOemAppInfo`, {
+      method: 'POST'
+    })
 
-        const oemAppInfo = await response.json()
-        console.log('Language:', i18n.langName, i18n.currentLanguageName)
-        console.log('OEM App Info:', oemAppInfo)
-
-        // Set OEM name based on current language
-        oemName.value = i18n.langName === 'zh-CN' ? oemAppInfo.name_cn : oemAppInfo.name
-
-        for (const app of oemAppInfo.apps) {
-            apps.push(app)
-        }
-    } catch (error) {
-        console.error('Failed to refresh apps:', error)
-    } finally {
-        isLoading.value = false
+    if (!response.ok) {
+      console.error('Failed to fetch OEM info:', response.statusText)
+      return
     }
+
+    const oemAppInfo = await response.json()
+    console.log('Language:', i18n.langName, i18n.currentLanguageName)
+    console.log('OEM App Info:', oemAppInfo)
+
+    // Set OEM name based on current language
+    oemName.value = i18n.langName === 'zh-CN' ? oemAppInfo.name_cn : oemAppInfo.name
+    
+    // Clear existing apps
+    apps.splice(0)
+
+    for (const app of oemAppInfo.apps) {
+      apps.push(app)
+    }
+  } catch (error) {
+    console.error('Failed to refresh apps:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 </script>

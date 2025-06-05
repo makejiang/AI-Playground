@@ -1,0 +1,11 @@
+{
+    "name": "moyoyo",
+    "nameCN": "模优优科技",
+    "tags": ["智能", "办公", "翻译", "效率"],
+    "iconUrl": "logo.moyoyo.png",
+    "homeUrl": "https://www.moyoyo.com",
+    "installer": "RealtimeTranslator-Installer.exe",
+    "processname": "RealtimeTranslator.exe",
+    "installedname": "RealtimeTranslator",
+    "uninstallProcessName": "unins000.exe"
+}

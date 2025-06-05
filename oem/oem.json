@@ -2,14 +2,8 @@
     "name": "Sixunited",
     "name_cn":"六联",
     "apps":[
-        "AIPPT",
-        "FlowyAI",
-        "Infinity",
-        "Coze",
-        "RSMeet",
-        "aish",
-        "SmartVision",
-        "OfficeAI",
-        "KutoolExcel"
+        "AIPPT", "FlowyAI", "Infinity",
+        "moyoyo", "RSMeet", "aish",
+        "zhiwo", "aibuilder", "KutoolExcel"
     ]
 }

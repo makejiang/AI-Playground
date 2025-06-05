@@ -48,6 +48,7 @@ import {
 import { updateIntelWorkflows } from './subprocesses/updateIntelWorkflows.ts'
 import getPort, { portNumbers } from 'get-port'
 import { externalResourcesDir, getMediaDir } from './util.ts'
+import { copyFileWithDirs } from './subprocesses/osProcessHelper.ts'
 import type { ModelPaths } from '@/assets/js/store/models.ts'
 import type { IndexedDocument, EmbedInquiry } from '@/assets/js/store/textInference.ts'
 
@@ -757,7 +758,6 @@ function initEventHandle() {
     if (!imagePath) return
     shell.openPath(imagePath)
   })
-
   ipcMain.on('openImageInFolder', (_event, url: string) => {
     const imagePath = getImagePathFromUrl(url)
     if (!imagePath) return
@@ -767,6 +767,90 @@ function initEventHandle() {
       exec(`explorer.exe /select, "${imagePath}"`)
     } else {
       shell.showItemInFolder(imagePath)
+    }
+  })
+
+  ipcMain.handle('getOemAppInfo', async () => {
+    try {
+      // Path to OEM directory
+      const oemDir = path.join(app.isPackaged ? process.resourcesPath : path.join(__dirname, '../../../'), 'oem')
+      const oemJsonPath = path.join(oemDir, 'oem.json')
+      const urlMediaRoot = `http://127.0.0.1:${mediaServerPort}`
+      
+      appLogger.info(`Reading OEM data from ${oemJsonPath}`, 'electron-backend')
+      
+      // Read the main OEM JSON file
+      if (!fs.existsSync(oemJsonPath)) {
+        appLogger.error(`OEM JSON file not found at ${oemJsonPath}`, 'electron-backend')
+        return JSON.stringify({ name: '', name_cn: '', apps: [] })
+      }
+      
+      const oemData = JSON.parse(fs.readFileSync(oemJsonPath, 'utf-8'))
+      const oemName = oemData.name || ''
+      const oemNameCn = oemData.name_cn || ''
+      const appList = oemData.apps || []
+      
+      // Process each app
+      const appsInfo = []
+      for (const appName of appList) {
+        const appJsonPath = path.join(oemDir, appName, 'app.json')
+        
+        try {
+          // Read the app JSON file
+          if (!fs.existsSync(appJsonPath)) {
+            appLogger.warn(`App JSON file not found for ${appName} at ${appJsonPath}`, 'electron-backend')
+            continue
+          }
+          
+          const appInfo = JSON.parse(fs.readFileSync(appJsonPath, 'utf-8'))
+          
+          // Update the iconUrl to include the full path
+          if (appInfo.iconUrl && !appInfo.iconUrl.startsWith('/')) {
+            // Copy iconUrl to media folder
+            const iconFilename = appInfo.iconUrl
+            const iconSrcPath = path.join(oemDir, appName, iconFilename)
+            const iconDstPath = path.join(mediaDir, 'app_icons', iconFilename)
+            
+            if (fs.existsSync(iconSrcPath) && !fs.existsSync(iconDstPath)) {
+              // Ensure the media folder exists
+              fs.mkdirSync(path.dirname(iconDstPath), { recursive: true })
+              // Copy the icon file to the media folder
+              await copyFileWithDirs(iconSrcPath, iconDstPath)
+              appLogger.info(`Copied icon ${iconFilename} to media folder`, 'electron-backend')
+            }
+            
+            appInfo.iconUrl = `${urlMediaRoot}/app_icons/${iconFilename}`
+          }
+          
+          // Add app status (simplified version - would need process checking logic)
+          appInfo.status = 'not-installed'
+          
+          // TODO: Implement proper app status checking similar to Python isvapps
+          // For now, we'll just set a default status
+          // In a complete implementation, you would:
+          // 1. Check if the app is running using process name
+          // 2. Check if the app is installed using installed name
+          // 3. Set status accordingly: 'running', 'installed', or 'not-installed'
+          
+          appsInfo.push(appInfo)
+        } catch (error) {
+          appLogger.error(`Error reading app JSON for ${appName}: ${error}`, 'electron-backend')
+        }
+      }
+      
+      // Construct the final result
+      const result = {
+        name: oemName,
+        name_cn: oemNameCn,
+        apps: appsInfo
+      }
+      
+      appLogger.info(`Successfully processed ${appsInfo.length} OEM apps`, 'electron-backend')
+      return result
+      
+    } catch (error) {
+      appLogger.error(`Error in getOemAppInfo: ${error}`, 'electron-backend')
+      return { name: '', name_cn: '', apps: [] }
     }
   })
   

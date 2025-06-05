@@ -45,7 +45,8 @@
     install_backends:
         DetailPrint "Installing offline backends..."
         ;Show a component selection dialog here
-        nsExec::Exec 'powershell -WindowStyle Normal -ExecutionPolicy ByPass "$EXEDIR\_ap_offline\install_envs.ps1" "$INSTDIR"'
+        ;nsExec::Exec 'powershell -WindowStyle Normal -ExecutionPolicy ByPass "$EXEDIR\_ap_offline\install_envs.ps1" "$INSTDIR"'
+        ExecWait '"$EXEDIR\_ap_offline\install_envs.exe" $INSTDIR'
         ; Remove the temporary offline package
         RMDir /r "$EXEDIR\_ap_offline"
         

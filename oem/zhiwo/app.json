@@ -1,0 +1,11 @@
+{
+    "name": "zhiwo",
+    "nameCN": "知我AI",
+    "tags": ["智能", "办公", "知识", "本地"],
+    "iconUrl": "logo.zhiwo.png",
+    "homeUrl": "https://knowme.xiaoduoai.com",
+    "installer": "zhiwoai.exe",
+    "processname": "知我AI.exe",
+    "installedname": "知我AI",
+    "uninstallProcessName": "Un_A.exe"
+}

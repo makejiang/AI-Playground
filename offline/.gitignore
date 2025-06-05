@@ -1,2 +1,4 @@
 offline-resource/
+install-envs.cpp/
 *.exe
+*.obj

@@ -7,7 +7,8 @@
         
         <div class="app-info">
             <div class="app-icon">
-                <img :src="`data:image/png;base64,${app.iconData}`" :alt="app.name" />
+                <!-- <img :src="`data:image/png;base64,${app.iconData}`" :alt="app.name" /> -->
+                <img :src="`${app.iconUrl}`" :alt="app.name" />
             </div>
             <div class="app-details">
                 <h3 class="app-name">{{ app.nameCN }}</h3>
@@ -39,18 +40,16 @@
             <button 
                 class="install-btn" 
                 @click="() => clickAction(status)" 
-                :disabled="!app.installedname"
+                :disabled="!app.installedname || status === 'installing' || status === 'uninstalling'"
             >
                 {{ btnText(status) }}
             </button>
             <button 
                 v-show="status === 'installed'"
-                class="install-btn uninstall-btn"                 
+                class="uninstall-btn"                 
                 @click="uninstallApp" 
                 :disabled="!app.installedname"
-            >
-                卸载
-            </button>
+            >Uninstall</button>
         </div>
 
         <!-- Moved progress bar to the bottom -->
@@ -72,7 +71,6 @@ interface App {
     nameCN: string
     tags: string[]
     iconUrl: string
-    iconData: string
     homeUrl: string
     installer: string
     processname: string
@@ -165,25 +163,22 @@ const uninstallApp = async (): Promise<void> => {
 
 const runApp = async (): Promise<void> => {
     console.log(`Running ${props.app.name}...`)
+    status.value = 'running'
 
-    try {
-        const response = await fetch(`${globalSetup.apiHost}/api/app/run`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(createRequestParams()),
-        })
-        
-        const data = await response.json()
-        console.log('run result', data)
-
-        if (data.result) {
-            status.value = 'running'
-        }
-    } catch (error) {
-        console.error('Error running app:', error)
-    }
+    fetch(`${globalSetup.apiHost}/api/app/runstream`, {
+      method: 'POST',
+      body: JSON.stringify(toRaw(createRequestParams())),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then((response) => {
+        const reader = response.body!.getReader()
+        return new SSEProcessor(reader, dataProcess, undefined).start()
+      })
+      .catch((ex) => {
+        status.value = 'installed'
+      })
 }
 
 const closeApp = async (): Promise<void> => {
@@ -210,11 +205,11 @@ const closeApp = async (): Promise<void> => {
 }
 
 const cancelInstallApp = (): void => {
-    console.log(`Cancelling install of ${props.app.name}...`)
+    console.log(`The installation package does not support cancellation.`)
 }
 
 const cancelUninstallApp = (): void => {
-    console.log(`Cancelling uninstall of ${props.app.name}...`)
+    console.log(`The uninstallation package does not support cancellation.`)
 }
 
 const unknownAct = (): void => {
@@ -274,26 +269,26 @@ const refreshAppStatus = async (): Promise<void> => {
 // Computed functions for UI
 const mapStatus = (currentStatus: AppStatus): string => {
     const statusMap: Record<AppStatus, string> = {
-        'not-installed': '未安装',
-        'installing': '安装中...',
-        'installed': '已安装',
-        'running': '运行中...',
-        'uninstalling': '卸载中...',
-        'not-supported': '不支持'
+        'not-installed': 'Not Installed',
+        'installing': 'Installing...',
+        'installed': 'Installed',
+        'running': 'Running...',
+        'uninstalling': 'Uninstalling...',
+        'not-supported': 'Not Supported'
     }
-    return statusMap[currentStatus] || '未知状态'
+    return statusMap[currentStatus] || 'Unknown Status'
 }
 
 const btnText = (currentStatus: AppStatus): string => {
     const buttonTextMap: Record<AppStatus, string> = {
-        'not-installed': '安装',
-        'installing': '取消',
-        'installed': '运行',
-        'running': '关闭',
-        'uninstalling': '取消',
+        'not-installed': 'Install',
+        'installing': 'Cancel',
+        'installed': 'Run',
+        'running': 'Close',
+        'uninstalling': 'Cancel',
         'not-supported': ''
     }
-    return buttonTextMap[currentStatus] || '未知状态'
+    return buttonTextMap[currentStatus] || 'Unknown Action'
 }
 
 const clickAction = (currentStatus: AppStatus): Promise<void> | void => {
@@ -435,11 +430,11 @@ onMounted(() => {
   }
 
   .uninstall-btn {
-    padding: 8px 20px;
+    padding: 8px 10px;
     width: 100px;
     border-radius: 20px;
     border: none;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;

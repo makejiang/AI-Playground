@@ -111,3 +111,13 @@ def get_country_code():
         logging.error(f"Error fetching country code: {e}")
         return None
 
+def get_path_media():
+    save_image_path = None
+    if os.getenv('USERPROFILE'):
+        save_image_path = os.path.join(os.getenv('USERPROFILE'), 'Documents', 'AI-Playground', 'media')
+    elif os.getenv('HOME'):
+        save_image_path = os.path.join(os.getenv('HOME'), 'AI-Playground', 'media')
+    else:
+        save_image_path = os.path.join('static', 'sd_out')
+
+    return save_image_path

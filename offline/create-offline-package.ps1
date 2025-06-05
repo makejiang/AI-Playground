@@ -199,6 +199,7 @@ function Copy-Setup-Scripts {
     # copy all sectup_* to $offlineResourceDir
     Copy-Item -Path "$scriptDir\*.ps1" -Destination "$offlineResourceDir\" -Recurse -Force
     Copy-Item -Path "$scriptDir\*.png" -Destination "$offlineResourceDir\" -Recurse -Force
+    Copy-Item -Path "$scriptDir\*.exe" -Destination "$offlineResourceDir\" -Recurse -Force
 }
 
 function New-EnvPackage {

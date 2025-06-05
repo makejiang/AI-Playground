@@ -35,12 +35,14 @@ export const useBackendServices = defineStore(
       .then((services) => {
         currentServiceInfo.value = services
       })
+      
     setTimeout(() => {
       window.electronAPI.getServices().then((services) => {
         console.log('getServices', services)
         currentServiceInfo.value = services
       })
-    }, 5000)
+    }, 3000)
+
     window.electronAPI.onServiceInfoUpdate((updatedInfo) => {
       currentServiceInfo.value = currentServiceInfo.value.map((oldInfo) =>
         oldInfo.serviceName === updatedInfo.serviceName ? updatedInfo : oldInfo,
@@ -68,6 +70,23 @@ export const useBackendServices = defineStore(
         currentServiceInfo.value.length > 0 &&
         currentServiceInfo.value.filter((s) => s.isRequired).every((s) => s.status === 'running'),
     )
+
+    async function startAiBackendService(): Promise<{ serviceStarted: boolean }> {
+      const aiBackendService = currentServiceInfo.value.find((s) => s.serviceName === 'ai-backend')
+      if (!aiBackendService) {
+        throw new Error('AI Backend Service not found')
+      }
+      if (aiBackendService.status === 'running') {
+        console.info('AI Backend Service is already running')
+        return { serviceStarted: true }
+      }
+      const startStatus = await startService(aiBackendService.serviceName)
+      if (startStatus !== 'running') {
+        console.warn(`Failed to start AI Backend Service, status: ${startStatus}`)
+        return { serviceStarted: false }
+      }
+      return { serviceStarted: true }
+    }
 
     async function startAllSetUpServices(): Promise<{ allServicesStarted: boolean }> {
       const serverStartups = await Promise.all(
@@ -112,6 +131,16 @@ export const useBackendServices = defineStore(
       }
       window.electronAPI.sendSetUpSignal(serviceName)
       return listener!.awaitFinalizationAndResetData()
+    }
+
+    async function getServiceStatus(
+      serviceName: BackendServiceName,
+    ): Promise<BackendStatus> {
+      const serviceInfo = currentServiceInfo.value.find((s) => s.serviceName === serviceName)
+      if (!serviceInfo) {
+        throw new Error(`Service ${serviceName} not found`)
+      }
+      return serviceInfo.status
     }
 
     async function updateServiceSettings(settings: ServiceSettings): Promise<BackendStatus> {
@@ -164,8 +193,10 @@ export const useBackendServices = defineStore(
       lastUsedBackend,
       updateLastUsedBackend,
       resetLastUsedInferenceBackend,
+      startAiBackendService,
       startAllSetUpServices,
       setUpService,
+      getServiceStatus,
       getServiceSettings,
       updateServiceSettings,
       startService,

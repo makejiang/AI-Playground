@@ -545,7 +545,7 @@
         <button
           class="gernate-btn self-stretch flex flex-col w-32 flex-none"
           v-if="!processing"
-          @click="newPromptGenerate"
+          @click="clickGenerate"
         >
           <span class="svg-icon i-generate-add w-7 h-7"></span>
           <span>{{ languages.COM_GENERATE }}</span>
@@ -659,6 +659,11 @@ const emits = defineEmits<{
     success?: () => void,
     fail?: () => void,
   ): void
+  (
+    e: 'showWarning', 
+    warning: string, 
+    func: () => void
+  ): void
   (e: 'showModelRequest', success?: () => void, fail?: () => void): void
 }>()
 
@@ -676,6 +681,7 @@ const workingBackends = ['openVINO'] as LlmBackend[]
 onMounted(async () => {
   chatPanel = document.getElementById('chatPanel')!
 })
+
 
 function finishGenerate() {
   textOutFinish = true
@@ -1120,7 +1126,7 @@ function fastGenerate(e: KeyboardEvent) {
     } else {
       e.preventDefault()
       if (question.value !== '') {
-        newPromptGenerate()
+        clickGenerate()
       }
     }
   }
@@ -1142,6 +1148,18 @@ async function newPromptGenerate() {
     generate(chatContext)
     question.value = ''
   } catch {}
+}
+
+async function clickGenerate() {
+  let ovStatus = await backendServices.getServiceStatus('openvino-backend')
+  if (ovStatus !== 'running') {
+    emits('showWarning', 'Please ensure openVINO services are running before using the Answer tab.', () => {
+      globalSetup.loadingState = 'manageInstallations'
+    })
+  }
+  else {
+    newPromptGenerate()
+  }
 }
 
 async function checkModelAvailability() {

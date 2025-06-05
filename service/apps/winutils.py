@@ -1,8 +1,10 @@
 import os
 import psutil
 import logging
+import threading
 import winreg
 import win32gui
+import win32com.client
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -72,7 +74,64 @@ def appisinstalled(installedname: str):
     return get_uninstall_string(installedname) is not None
 
 def appisrunning(processname: str):
-    return processname in (p.name() for p in psutil.process_iter(attrs=['name']))
+    # return processname in (p.name() for p in psutil.process_iter(attrs=['name']))
+    # return (p.name() for p in psutil.process_iter(attrs=['name']) if p.info['name'] == processname) is not None
+    for p in psutil.process_iter(attrs=['name']):
+        if p.info['name'] == processname:
+            return True
+
+    logger.info(f"appisrunning: {processname} not running")
+    return False
+
+def appisrunning_count(processname: str):
+    return sum(1 for p in psutil.process_iter(attrs=['name']) if p.info['name'] == processname)
+
+def is_process_running(process_name):
+    """Checks if a process with the given name is running.
+    Args:
+        process_name: The name of the process to check (e.g., "notepad.exe").
+    Returns:
+        True if the process is running, False otherwise.
+    """
+    try:
+        wmi = win32com.client.GetObject("winmgmts:")
+        processes = wmi.InstancesOf("Win32_Process")
+        for process in processes:
+            if process.Properties_("Name").Value == process_name:
+                return True
+        return False
+    except Exception as e:
+        print(f"Error checking process: {e}")
+        return False
+
+def list_running_processes():
+    """Lists all running processes on the system."""
+    try:
+        wmi = win32com.client.GetObject("winmgmts:")
+        processes = wmi.InstancesOf("Win32_Process")
+
+        process_list = []
+        for process in processes:
+            process_name = process.Properties_("Name").Value
+            process_list.append(process_name)
+
+        return sorted(process_list)
+    except Exception as e:
+        logger.error(f"Error listing processes: {e}")
+        return []
+
+def app_running_count(processname: str):
+    try:
+        wmi = win32com.client.GetObject("winmgmts:")
+        processes = wmi.InstancesOf("Win32_Process")
+        count = 0
+        for process in processes:
+            if process.Properties_("Name").Value == processname:
+                count += 1
+        return count
+    except Exception as e:
+        print(f"Error checking process: {e}")
+        return 0
 
 def get_uninstall_string(software_name):
     # path_uninstall = _get_reg_software_value(winreg.HKEY_LOCAL_MACHINE, software_name, "QuietUninstallString")
@@ -101,8 +160,27 @@ def get_uninstall_string(software_name):
 
     return path_uninstall
 
+def get_install_location_reg(software_name):
+    # This function retrieves the installation location of a software from the registry.
+    # It searches both 32-bit and 64-bit registry views.
+    path = _get_reg_software_value(winreg.HKEY_LOCAL_MACHINE, software_name, "InstallLocation")
+    if path:
+        return path
 
-def get_install_localtion(software_name):
+    path = _get_reg_software_value(winreg.HKEY_LOCAL_MACHINE, software_name, "InstallLocation", wow6432=True)
+    if path:
+        return path
+
+    path = _get_reg_software_value(winreg.HKEY_CURRENT_USER, software_name, "InstallLocation")
+    if path:
+        return path
+    path = _get_reg_software_value(winreg.HKEY_CURRENT_USER, software_name, "InstallLocation", wow6432=True)
+    if path:
+        return path
+
+    return None
+
+def get_install_location(software_name):
     path_uninstall = get_uninstall_string(software_name)
     logger.info(f"uninstall string: {path_uninstall}")
 
@@ -124,5 +202,6 @@ def get_install_localtion(software_name):
     install_dir = install_dir.replace("Program-Files-(x86)", "Program Files (x86)")
     install_dir = install_dir.replace("Program-Files", "Program Files")
     
-    logger.info(f"get_install_localtion: {install_dir}")
+    logger.info(f"get_install_location: {install_dir}")
     return install_dir
+

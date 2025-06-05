@@ -1,4 +1,50 @@
+param(
+    [string]$installdir,
+    [string]$envs,
+    [string]$windowhandle
+)
+
+
 $ErrorActionPreference = "Stop"
+
+# Add Windows API functions for sending messages
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Win32 {
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+    
+    [DllImport("user32.dll", CharSet = CharSet.Ansi)]
+    public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, string lParam);
+    
+    public const uint WM_USER = 0x0400;
+    public const uint WM_INSTALL_PROGRESS = WM_USER + 100;
+}
+"@
+
+# Function to send progress update to the window
+function Send-ProgressUpdate {
+    param(
+        [int]$BeginValue,
+        [int]$EndValue
+    )
+    
+    if ($windowhandle -and $windowhandle -ne "") {
+        try {
+            $hwnd = [IntPtr][long]$windowhandle
+            [Win32]::SendMessage($hwnd, [Win32]::WM_INSTALL_PROGRESS, [IntPtr]$BeginValue, [IntPtr]$EndValue) | Out-Null
+
+        }
+        catch {
+            Write-Host "Error sending message to window: $_"
+        }
+        Write-Host "Progress update sent: $BeginValue to $EndValue"
+    }
+}
+
+
 
 # arguments:
 # - installdir: The directory where the AI Playground is installed
@@ -8,23 +54,16 @@ $ErrorActionPreference = "Stop"
 #   .\setup_all.ps1 installdir="C:\path\to\install" envs="ai-backend comfyui"
 
 # Get the directory of the current script file
-$scriptDir = $PSScriptRoot
-$installDir = "$HOME\AppData\Local\Programs\AI Playground"
-$envsToSetup = @("ai-backend", "ov", "comfyui", "llamacpp")
-
-
-# Parse arguments
-foreach ($arg in $args) {
-    if ($arg -match "^installdir=(.+)$") {
-        $installDir = $matches[1]
-    }
-    elseif ($arg -match '^envs="(.*)"$' -or $arg -match "^envs='(.*)'$" -or $arg -match "^envs=(.*)$") {
-        $envsToSetup = $matches[1] -split '\s+' | Where-Object { $_ -ne "" }
-    }
+$envList = $envs -split ' ' | Where-Object { $_ -ne '' }
+$totalEnvs = $envList.Count
+$currentEnv = 0
+if (-not $installdir) {
+    $installdir = "$HOME\AppData\Local\Programs\AI Playground"
 }
 
+
 Write-Host "Install directory: $installDir"
-Write-Host "Environments to set up: $($envsToSetup -join ', ')"
+Write-Host "Environments to set up: $($envList -join ', ')"
 
 # Check if the install directory exists
 if (-not (Test-Path $installDir)) {
@@ -40,12 +79,21 @@ $envScriptMap = @{
     "llamacpp" = "setup_llamacpp-env.ps1"
 }
 
+
 # Run the required setup scripts
-foreach ($env in $envsToSetup) {
+foreach ($env in $envList) {
+    $currentEnv++
+    $baseProgress = [math]::Round(($currentEnv - 1) * 500 / $totalEnvs)
+    $maxProgress = [math]::Round($currentEnv * 500 / $totalEnvs)
+
+    Send-ProgressUpdate -BeginValue $baseProgress -EndValue $maxProgress
+
     $scriptName = $envScriptMap[$env]
     if ($scriptName) {
         Write-Host "Setting up $env environment..."
-        $scriptPath = Join-Path $scriptDir $scriptName
+        
+
+        $scriptPath = Join-Path $PSScriptRoot $scriptName
         
         Write-Host "Running script: $scriptPath"
         & $scriptPath "$installDir"
@@ -60,6 +108,7 @@ foreach ($env in $envsToSetup) {
     else {
         Write-Host "Warning: Unknown environment '$env', skipping"
     }
+
 }
 
 function Kill-Git-Process {
@@ -70,4 +119,8 @@ function Kill-Git-Process {
     }   
 }
 
+Send-ProgressUpdate -BeginValue 500 -EndValue 500
 Kill-Git-Process
+Start-Sleep -Seconds 1
+
+Send-ProgressUpdate -BeginValue 2000 -EndValue 2000

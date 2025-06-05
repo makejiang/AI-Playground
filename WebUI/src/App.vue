@@ -135,16 +135,16 @@
   </main>
   <main v-show="globalSetup.loadingState === 'running'" class="flex-auto flex flex-col relative">
     <div class="main-tabs flex-none pt-2 px-3 flex items-end justify-start gap-1 text-gray-400">
-      <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
+      <button class="tab" :class="{ active: activeTabIdx == 0 }" @click="switchTab(0)">
         {{ languages.TAB_ISV_APPS }}
       </button>
-      <button class="tab" :class="{ active: activeTabIdx == 0 }" @click="switchTab(0)">
+      <button class="tab" :class="{ active: activeTabIdx == 1 }" @click="switchTab(1)">
         {{ languages.TAB_CREATE }}
       </button>
-      <button class="tab" :class="{ active: activeTabIdx == 1 }" @click="switchTab(1)">
+      <button class="tab" :class="{ active: activeTabIdx == 2 }" @click="switchTab(2)">
         {{ languages.TAB_ENHANCE }}
       </button>
-      <button class="tab" :class="{ active: activeTabIdx == 2 }" @click="switchTab(2)">
+      <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
         {{ languages.TAB_ANSWER }}
       </button>
       <button class="tab" :class="{ active: activeTabIdx == 4 }" @click="switchTab(4)">
@@ -153,26 +153,27 @@
       <span class="main-tab-glider tab absolute" :class="{ [`pos-${activeTabIdx}`]: true }"></span>
     </div>
     <div class="main-content flex-auto rounded-t-lg relative">
-      <create
+      <oem-bundle-a
         v-show="activeTabIdx == 0"
+      ></oem-bundle-a>
+      <create
+        v-show="activeTabIdx == 1"
         @postImageToEnhance="postImageToEnhance"
         @show-download-model-confirm="showDownloadModelConfirm"
       ></create>
       <enhance
-        v-show="activeTabIdx == 1"
+        v-show="activeTabIdx == 2"
         ref="enhanceCompt"
         @show-download-model-confirm="showDownloadModelConfirm"
       >
       </enhance>
       <answer
-        v-show="activeTabIdx == 2"
+        v-show="activeTabIdx == 3"
         ref="answer"
         @show-download-model-confirm="showDownloadModelConfirm"
         @show-model-request="showModelRequest"
+        @show-warning="showWarning"
       ></answer>
-      <oem-bundle-a
-        v-show="activeTabIdx == 3"
-      ></oem-bundle-a>
       <learn-more 
         v-show="activeTabIdx == 4"
       ></learn-more>
@@ -277,6 +278,7 @@ import WarningDialog from '@/components/WarningDialog.vue'
 import { useBackendServices } from './assets/js/store/backendServices.ts'
 import { ServerStackIcon } from '@heroicons/vue/24/solid'
 import { useColorMode } from '@vueuse/core'
+import { ToastAction } from 'reka-ui'
 
 const backendServices = useBackendServices()
 const theme = useTheme()
@@ -290,7 +292,7 @@ const warningCompt = ref<InstanceType<typeof WarningDialog>>()
 const showSettingBtn = ref<HTMLButtonElement>()
 
 const isOpen = ref(false)
-const activeTabIdx = ref(3)
+const activeTabIdx = ref(0)
 const showSetting = ref(false)
 const showDowloadDlg = ref(false)
 const showModelRequestDialog = ref(false)
@@ -336,15 +338,26 @@ async function setInitalLoadingState() {
   }
   if (backendServices.allRequiredSetUp) {
     globalSetup.loadingState = 'loading'
-    const result = await backendServices.startAllSetUpServices()
-    if (result.allServicesStarted) {
-      await globalSetup.initSetup()
-      globalSetup.loadingState = 'running'
-      emitter.emit('backendReady')
-      return
-    }
+    // const result = await backendServices.startAllSetUpServices()
+    // if (result.allServicesStarted) {
+    //   await globalSetup.initSetup()
+    //   globalSetup.loadingState = 'running'
+    //   emitter.emit('aiBackendReady')
+    //   return
+    // }
+    backendServices.startAiBackendService().then((result) => {
+      if (result.serviceStarted) {
+        globalSetup.initSetup().then(() => {
+          globalSetup.loadingState = 'running'
+          emitter.emit('aiBackendReady')
+        })
+      }
+      else {
+        globalSetup.loadingState = 'manageInstallations'
+      }
+    })
   }
-  globalSetup.loadingState = 'manageInstallations'
+  
 }
 
 async function concludeLoadingStateAfterManagedInstallationDialog() {
@@ -395,6 +408,18 @@ function autoHideAppSettings(e: MouseEvent) {
 
 function switchTab(index: number) {
   activeTabIdx.value = index
+  // if (index === 3) {
+  //   backendServices.getServiceStatus('openvino-backend').then((status) => {
+  //     if (status !== 'running') {
+  //       showWarning(
+  //         'Please ensure openVINO services are running before using the Answer tab.',
+  //         () => {
+  //           globalSetup.loadingState = 'manageInstallations'
+  //         },
+  //       )
+  //     }
+  //   })
+  // }
 }
 
 function miniWindow() {

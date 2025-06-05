@@ -43,7 +43,9 @@ from model_downloader import HFPlaygroundDownloader
 from model_downloader_ms import MSPlaygroundDownloader
 
 from psutil._common import bytes2human
+import psutil
 import traceback
+import shutil
 from ipex_embedding import IpexEmbeddingModel
 from pydantic import BaseModel
 import json, base64
@@ -51,7 +53,7 @@ import logging
 import apps
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
+running_processes = apps.winutils.list_running_processes()
 
 app = APIFlask(__name__)
 
@@ -524,12 +526,15 @@ def cache_mask_image():
 ##################################################################
 # following api for app manager
 isvapps = {
-    'AIPPT': apps.aippt.app_instance,
-    'Coze': apps.aippt.app_instance,
-    'FlowyAI': apps.aippt.app_instance,
-    'Infinity': apps.aippt.app_instance,
-    'AIPCMeeting': apps.aippt.app_instance,
-    'FlashPaint': apps.aippt.app_instance,
+    'AIPPT': apps.normal.app_instance,
+    'Coze': apps.normal.app_instance,
+    'FlowyAI': apps.normal.app_instance,
+    'Infinity': apps.normal.app_instance,
+    'AIPCMeeting': apps.normal.app_instance,
+    'FlashPaint': apps.normal.app_instance,
+    'moyoyo': apps.moyoyo.app_instance,
+    'zhiwo': apps.zhiwo.app_instance,
+    'aibuilder': apps.aibuilder.app_instance,
 } 
 
 
@@ -621,6 +626,21 @@ def run_app():
     ret = app_op.run(processname, installedname)
     return jsonify({"result": ret, "message": "Run failed" if not ret else "Run succeeded"})
 
+@app.post("/api/app/runstream")
+def run_app_stream():
+    app_info = request.get_json().get("app")
+    logging.info(f"app: {app_info}")
+    app_op = isvapps.get(app_info['name'], None)
+    if not app_op:
+        logging.error(f"App {app_info['name']} not found in isvapps")
+        return jsonify({"result": False, "message": "App not supported"})
+
+    processname = app_info.get("processname")
+    installedname = app_info.get("installedname")
+
+    iterator = app_op.run_stream(processname, installedname)
+    return Response(stream_with_context(iterator), content_type="text/event-stream")
+
 
 @app.post("/api/app/close")
 def close_app():
@@ -635,13 +655,13 @@ def close_app():
     ret = app_op.close(processname)
     return jsonify({"result": ret, "message": "Close failed" if not ret else "Close succeeded"})
 
-
+@app.get("/api/app/getOemAppInfo")
 @app.post("/api/app/getOemAppInfo")
-def get_oem_info():
+def get_oem_info():    
     # Path to OEM directory
     oem_dir = os.path.join('..', 'oem')
     oem_json_path = os.path.join(oem_dir, 'oem.json')
-    
+    url_media_root = 'http://127.0.0.1:58000'
     try:
         # Read the main OEM JSON file
         with open(oem_json_path, 'r', encoding='utf-8') as f:
@@ -650,7 +670,7 @@ def get_oem_info():
         oem_name = oem_data.get('name', '')
         oem_name_cn = oem_data.get('name_cn', '')
         app_list = oem_data.get('apps', [])
-        
+                
         # Process each app
         apps_info = []
         for app_name in app_list:
@@ -663,42 +683,57 @@ def get_oem_info():
                 
                 # Update the iconUrl to include the full path
                 if 'iconUrl' in app_info and not app_info['iconUrl'].startswith('/'):
-                    app_info['iconUrl'] = os.path.join(oem_dir, app_name, app_info['iconUrl'])
-                
-                # add iconData in app_info
-                app_info['iconData'] = base64.b64encode(open(app_info['iconUrl'], 'rb').read()).decode('utf-8')
+                    #app_info['iconUrl'] = os.path.join(oem_dir, app_name, app_info['iconUrl'])
+                    # copy iconUrl to media folder
+                    icon_filename = app_info['iconUrl']
+                    icon_src_path = os.path.join(oem_dir, app_name, icon_filename)
+                    icon_dst_path = os.path.join(utils.get_path_media(), 'app_icons', icon_filename)
+                    if os.path.exists(icon_src_path) and not os.path.exists(icon_dst_path):
+                        # Ensure the media folder exists
+                        os.makedirs(os.path.dirname(icon_dst_path), exist_ok=True)
+                        # Copy the icon file to the media folder
+                        shutil.copy2(icon_src_path, icon_dst_path)
+
+                    app_info['iconUrl'] = f'{url_media_root}/app_icons/{icon_filename}'
+
 
                 # add app status
                 app_info['status'] = 'not-installed'
                 app_op = isvapps.get(app_info['name'], None)
                 if app_op:
-                    if app_op.is_running(app_info['processname']):
+                    if app_info['processname'] in running_processes:
                         app_info['status'] = 'running'
-
-                    if app_op.is_installed(app_info['installedname']):
+                    elif app_op.is_installed(app_info['installedname']):
                         app_info['status'] = 'installed'
 
+                    
                 apps_info.append(app_info)
             except Exception as e:
                 logging.error(f"Error reading app JSON for {app_name}: {e}")
-        
+
         # Construct the final result
         result = {
             "name": oem_name,
             "name_cn": oem_name_cn,
             "apps": apps_info
-        }        
+        }
+        
         return json.dumps(result, ensure_ascii=False)
 
     except Exception as e:
         logging.error(f"Error in getOemApps: {e}")
+        
         return json.dumps({"name": "", "apps": []}, ensure_ascii=False)
 
+def _appisrunning(processname: str):
+    ret = processname in (p.name() for p in psutil.process_iter(attrs=['name']))
+    logging.info(f"appisrunning: {processname} is running: {ret}")
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser(description="AI Playground Web service")
     parser.add_argument("--port", type=int, default=59999, help="Service listen port")
     args = parser.parse_args()
+
+    #apps.winutils.list_running_processes()
     app.run(host="127.0.0.1", port=args.port)

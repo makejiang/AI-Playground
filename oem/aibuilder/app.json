@@ -1,0 +1,11 @@
+{
+    "name": "aibuilder",
+    "nameCN": "Intel® AI Assistant Builder",
+    "tags": ["智能", "办公", "RAG", "助手"],
+    "iconUrl": "logo.aibuilder.png",
+    "homeUrl": "https://aibuilder.intel.com",
+    "installer": "Intel.R.AI.Assistant.Builder_Installer_SA_1.2.0.517.exe",
+    "processname": "IntelAIA.exe",
+    "installedname": "Intel(R) AI Assistant Builder",
+    "uninstallProcessName": "msiexec.exe"
+}
