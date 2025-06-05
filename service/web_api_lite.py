@@ -18,23 +18,13 @@ except ImportError:
     except ImportError:
         pass
 
+
 from datetime import datetime
 import os
 import threading
 from flask import jsonify, request, Response, stream_with_context
 from apiflask import APIFlask
 
-from llm_adapter import LLM_SSE_Adapter
-from sd_adapter import SD_SSE_Adapter
-from paint_biz import (
-    TextImageParams,
-    ImageToImageParams,
-    InpaintParams,
-    OutpaintParams,
-    UpscaleImageParams,
-)
-import paint_biz
-import llm_biz
 import aipg_utils as utils
 import rag
 import service_config
@@ -47,7 +37,6 @@ from psutil._common import bytes2human
 import psutil
 import traceback
 import shutil
-from ipex_embedding import IpexEmbeddingModel
 from pydantic import BaseModel
 import json, base64
 import logging
@@ -64,29 +53,6 @@ def healthEndpoint():
     return jsonify({"health": "OK"})
 
 
-@app.post("/api/llm/chat")
-def llm_chat():
-    paint_biz.dispose_basic_model()
-    params = request.get_json()
-    
-    external_rag_context = params.pop("external_rag_context", None)
-    
-    llm_params = llm_biz.LLMParams(**params)
-    sse_invoker = LLM_SSE_Adapter(
-        external_rag_context=external_rag_context
-    )
-    it = sse_invoker.text_conversation(llm_params)
-    return Response(stream_with_context(it), content_type="text/event-stream")
-
-
-@app.get("/api/llm/stopGenerate")
-def stop_llm_generate():
-    import llm_biz
-
-    llm_biz.stop_generate()
-    return jsonify({"code": 0, "message": "success"})
-
-
 @app.post("/api/sd/generate")
 def sd_generate():
     """
@@ -99,7 +65,15 @@ def sd_generate():
         "mask?": file
     }
     """
-    llm_biz.dispose()
+    from sd_adapter import SD_SSE_Adapter
+    from paint_biz import (
+        TextImageParams,
+        ImageToImageParams,
+        InpaintParams,
+        OutpaintParams,
+        UpscaleImageParams,
+    )
+
     mode = request.form.get("mode", default=0, type=int)
     if mode != 0:
         if mode == 1:
@@ -150,8 +124,8 @@ def sd_generate():
 @app.get("/api/sd/stopGenerate")
 def stop_sd_generate():
     import paint_biz
-
     paint_biz.stop_generate()
+
     return jsonify({"code": 0, "message": "success"})
 
 
@@ -735,6 +709,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AI Playground Web service")
     parser.add_argument("--port", type=int, default=59999, help="Service listen port")
     args = parser.parse_args()
+    
+    if args.port==59789:
+        # start a thread to kill self after 1 miniute
+        def kill_self():
+            import time
+            time.sleep(60)
+            logging.info("Killing self after 60 seconds")
+            os._exit(0)
+        
+        threading.Thread(target=kill_self, daemon=True).start()
+        logging.info("Starting AI Playground Web service in kill self mode")
 
     #apps.winutils.list_running_processes()
     app.run(host="127.0.0.1", port=args.port)

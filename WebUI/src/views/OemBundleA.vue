@@ -30,7 +30,7 @@ const globalSetup = useGlobalSetup()
 const i18n = useI18N()
 const languages = i18n.state
 const oemName = ref<string>('OEM')
-const isLoading = ref<boolean>(true)
+const isLoading = ref<boolean>(false)
 
 const apps = reactive<App[]>([])
 

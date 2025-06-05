@@ -1153,7 +1153,7 @@ async function newPromptGenerate() {
 async function clickGenerate() {
   let ovStatus = await backendServices.getServiceStatus('openvino-backend')
   if (ovStatus !== 'running') {
-    emits('showWarning', 'Please ensure openVINO services are running before using the Answer tab.', () => {
+    emits('showWarning', 'Please ensure the openVINO service is running before using Chat.', () => {
       globalSetup.loadingState = 'manageInstallations'
     })
   }

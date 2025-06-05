@@ -104,6 +104,16 @@ foreach ($env in $envList) {
         }
         Write-Host "$env environment setup completed."
 
+        if ($env -eq "ai-backend") {
+            # If the environment is ai-backend, we need to set the envDir and webApiScript variables
+            $pythonExe = Join-Path $installDir "resources\ai-backend-env\python.exe"
+            $workDir = Join-Path $installDir "resources\service"
+
+            # run the web_api_lite.py script and don't wait for it to finish
+            Start-Process -FilePath "$pythonExe" -ArgumentList "web_api_lite.py --port 59789" -WorkingDirectory "$workDir" -WindowStyle Hidden -RedirectStandardOutput "NUL"
+            Write-Host "Started web_api_lite.py in the background."
+        }
+
     }
     else {
         Write-Host "Warning: Unknown environment '$env', skipping"
@@ -121,6 +131,9 @@ function Kill-Git-Process {
 
 Send-ProgressUpdate -BeginValue 500 -EndValue 500
 Kill-Git-Process
-Start-Sleep -Seconds 1
+
+# Start the wait for initialization script in the background without waiting for it to finish
+$waitScriptPath = Join-Path $PSScriptRoot "wait_for_init_finished.ps1"
+Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -File `"$waitScriptPath`"" -WindowStyle Hidden
 
 Send-ProgressUpdate -BeginValue 2000 -EndValue 2000

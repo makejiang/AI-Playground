@@ -147,7 +147,7 @@ export class AiBackendService extends LongLivedPythonApiService {
 
     const apiProcess = spawn(
       this.python.getExePath(),
-      ['web_api.py', '--port', this.port.toString()],
+      ['web_api_lite.py', '--port', this.port.toString()],
       {
         cwd: this.serviceDir,
         windowsHide: true,

@@ -236,8 +236,8 @@ Get-Wheels-AI-Backend
 Get-Wheels-OpenVINO
 # Get-Wheels-LlamaCPP
 
-Get-ComfyUI
-Get-Wheels-ComfyUI
+#Get-ComfyUI
+#Get-Wheels-ComfyUI
 
 Copy-Setup-Scripts
 New-EnvPackage

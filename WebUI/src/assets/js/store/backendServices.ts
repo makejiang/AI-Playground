@@ -41,7 +41,7 @@ export const useBackendServices = defineStore(
         console.log('getServices', services)
         currentServiceInfo.value = services
       })
-    }, 3000)
+    }, 5000)
 
     window.electronAPI.onServiceInfoUpdate((updatedInfo) => {
       currentServiceInfo.value = currentServiceInfo.value.map((oldInfo) =>

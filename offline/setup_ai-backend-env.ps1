@@ -120,6 +120,7 @@ function Install-EnvRequirements {
 
 }
 
+
 function Convert-DevId2Arch {
     param (
         [string]$deviceId
