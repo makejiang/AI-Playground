@@ -15,7 +15,6 @@ class BaseApp:
         ...
     
     def is_running(self, process_name: str):
-        process_name = process_name.split('\\')[-1]
         ret = winutils.appisrunning(process_name)
         logger.info(f"Process '{process_name}' is running: {ret}")
         return ret
@@ -23,7 +22,7 @@ class BaseApp:
     def is_installed(self, install_name: str):
         return winutils.appisinstalled(install_name)
 
-    def install_stream(self, app_name: str, installer: str, installed_name: str):
+    def install_stream(self, app_name: str, installer: str, installed_name: str, process_name: str):
         # Placeholder for installation logic
         logger.info(f"Installing {app_name} with stream mode...")
         
@@ -48,9 +47,9 @@ class BaseApp:
             return 'data:{"state":"not-installed", "message":"Installation failed, could not start installer"}\0'
         #if ret:
         #    threading.Thread(target=self.__report_process_running, kwargs={"process_name": installer, "installed_name": installed_name}).start()
-        return self._report_install_process(installer, installed_name)
+        return self._report_install_process(installer, installed_name, process_name)
 
-    def _report_install_process(self, installer: str, installed_name: str):
+    def _report_install_process(self, installer: str, installed_name: str, process_name: str):
         logger.info(f"report_install_process: {installer}")
         
         # wait for the process to start
@@ -75,6 +74,10 @@ class BaseApp:
         # check if the app is installed
         ret = winutils.appisinstalled(installed_name)
         if ret:
+            while self.is_running(process_name):
+                yield 'data:{"state":"running"}\0'
+                time.sleep(1)
+
             logger.info(f"'{installed_name}' is installed")
             yield 'data:{"state":"installed", "message":"Installation completed successfully"}\0'
         else:
@@ -188,20 +191,20 @@ class BaseApp:
             return 'data:{"state":"not-installed", "message":"is the app installed correctly?"}\0'
 
         logger.info(f"calling cmd process: {path_exe}")
-        subprocess.Popen([path_exe], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        # win32api.ShellExecute(
-        #             0, 
-        #             "runas", 
-        #             path_exe, 
-        #             None, 
-        #             None, 
-        #             win32con.SW_SHOWNORMAL
-        #         )
-        return self._report_running_process(process_name)
+        #subprocess.Popen([path_exe], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        win32api.ShellExecute(
+                    0, 
+                    "runas", 
+                    path_exe, 
+                    None, 
+                    None, 
+                    win32con.SW_SHOWNORMAL
+                )
+        return self._report_running_process(process_name.split('\\')[-1])
 
     def _report_running_process(self, process_name: str):
         # wait for the process to finish
-        while winutils.appisrunning(process_name):
+        while self.is_running(process_name):
             yield 'data:{"state":"running"}\0'
             time.sleep(1)
 

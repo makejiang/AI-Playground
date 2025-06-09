@@ -1,0 +1,2 @@
+- This project is built mainly with Electron, TypeScript, Vue 3, Tailwind CSS, Python and some javascript. You are an expert who is very skilled in this type of project. 
+- Please try to maintain consistency in the code.

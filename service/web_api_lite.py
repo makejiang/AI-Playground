@@ -530,22 +530,6 @@ def get_app_status():
 
     return jsonify({"status": "not-installed"})
 
-
-@app.post("/api/app/install")
-def install_app():
-    app_info = request.get_json().get("app")
-    logging.info(f"app: {app_info}")
-    app_op = isvapps.get(app_info['name'], None)
-    if not app_op:
-        logging.error(f"App {app_info['name']} not found in isvapps")
-        return jsonify({"result": False, "message": "App not supported"})
-
-    appname = app_info.get("name")
-    installer = app_info.get("installer")
-    ret = app_op.install(appname, installer)
-
-    return jsonify({"result": ret})
-
 @app.post("/api/app/installstream")
 def install_app_stream():
     app_info = request.get_json().get("app")
@@ -555,24 +539,11 @@ def install_app_stream():
     appname = app_info.get("name")
     installer = app_info.get("installer")
     installedname = app_info.get("installedname")
+    processname = app_info.get("processname")
+    processname = processname.split('\\')[-1]
 
-    iterator = app_op.install_stream(appname, installer, installedname)
+    iterator = app_op.install_stream(appname, installer, installedname, processname)
     return Response(stream_with_context(iterator), content_type="text/event-stream")
-
-@app.post("/api/app/uninstall")
-def uninstall_app():
-    app_info = request.get_json().get("app")
-    logging.info(f"app: {app_info}")
-    app_op = isvapps.get(app_info['name'], None)
-    if not app_op:
-        logging.error(f"App {app_info['name']} not found in isvapps")
-        return jsonify({"result": False, "message": "App not supported"})
-
-    installedname = app_info.get("installedname")
-    uninstallProcessName = app_info.get("uninstallProcessName")
-
-    ret = app_op.uninstall(installedname, uninstallProcessName)
-    return jsonify({"result": ret, "message": "Uninstall failed" if not ret else "Uninstall succeeded"})
 
 @app.post("/api/app/uninstallstream")
 def uninstall_app_stream():
@@ -586,20 +557,6 @@ def uninstall_app_stream():
     iterator = app_op.uninstall_stream(installedname, uninstallProcessName)
     return Response(stream_with_context(iterator), content_type="text/event-stream")
 
-@app.post("/api/app/run")
-def run_app():
-    app_info = request.get_json().get("app")
-    logging.info(f"app: {app_info}")
-    app_op = isvapps.get(app_info['name'], None)
-    if not app_op:
-        logging.error(f"App {app_info['name']} not found in isvapps")
-        return jsonify({"result": False, "message": "App not supported"})
-
-    processname = app_info.get("processname")
-    installedname = app_info.get("installedname")
-
-    ret = app_op.run(processname, installedname)
-    return jsonify({"result": ret, "message": "Run failed" if not ret else "Run succeeded"})
 
 @app.post("/api/app/runstream")
 def run_app_stream():

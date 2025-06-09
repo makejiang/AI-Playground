@@ -156,6 +156,7 @@ import { useBackendServices } from '@/assets/js/store/backendServices'
 import LanguageSelector from '@/components/LanguageSelector.vue'
 import BackendOptions from '@/components/BackendOptions.vue'
 
+const closeFunction = ref(() => {})
 const emits = defineEmits<{
   (e: 'close'): void
 }>()
@@ -257,6 +258,7 @@ async function installAllSelected() {
 }
 
 function closeInstallations() {
+  closeFunction.value()
   emits('close')
 }
 
@@ -298,6 +300,8 @@ function convertVisibility(shouldBeVisible: boolean) {
     return 'hidden'
   }
 }
+
+defineExpose({ closeFunction })
 </script>
 
 <style>

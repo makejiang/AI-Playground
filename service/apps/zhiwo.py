@@ -41,33 +41,4 @@ class app(BaseApp):
             
         return self._report_running_process(process_name)
 
-    # def close(self, process_name: str):
-    #     logger.info(f"closeapp: {process_name}")
-        
-    #     # kill the process
-    #     for proc in psutil.process_iter(attrs=['name', 'pid']):
-    #         try:
-    #             if proc.info['name'] == process_name:
-    #                 subprocess.run(["taskkill", "/F", "/PID", str(proc.info['pid'])], check=True)
-    #         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-    #             logger.error(f"Error closing process {process_name}: {proc.info['pid']}")
-    #             continue
-
-
-    #     return True
-
-    # def _report_running_process(self, process_name: str):
-    #     # wait for the process to start
-    #     count = 10
-    #     while not winutils.appisrunning(process_name):
-    #         time.sleep(0.3)
-    #         count -= 1
-    #         if count < 0:
-    #             logger.error(f"'{process_name}' did not start in time")
-    #             yield 'data:{"state":"installed", "message":"Installation failed, process did not start"}\0'
-    #             return
-
-    #     yield 'data:{"state":"running"}\0'
-    #     self._report_process_running(process_name)
-
 app_instance = app()

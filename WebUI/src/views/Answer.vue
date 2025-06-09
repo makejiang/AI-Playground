@@ -582,6 +582,7 @@ import { useConversations } from '@/assets/js/store/conversations'
 import { llmBackendTypes, LlmBackend, useTextInference } from '@/assets/js/store/textInference'
 import { useBackendServices } from '@/assets/js/store/backendServices'
 import { PlusIcon, ArrowPathIcon } from '@heroicons/vue/24/solid'
+import e from 'express'
 
 const conversations = useConversations()
 const models = useModels()
@@ -662,6 +663,10 @@ const emits = defineEmits<{
   (
     e: 'showWarning', 
     warning: string, 
+    func: () => void
+  ): void
+  (
+    e: 'showBackendsManager', 
     func: () => void
   ): void
   (e: 'showModelRequest', success?: () => void, fail?: () => void): void
@@ -1132,6 +1137,21 @@ function fastGenerate(e: KeyboardEvent) {
   }
 }
 
+async function clickGenerate() {
+  let ovStatus = await backendServices.getServiceStatus('openvino-backend')
+  if (ovStatus !== 'running') {
+    emits('showWarning', 'Please ensure the openVINO service is running before using Chat.', () => {
+      emits('showBackendsManager', () => {
+        console.log('closed backends manager')
+        newPromptGenerate()
+      })
+    })
+  }
+  else {
+    newPromptGenerate()
+  }
+}
+
 async function newPromptGenerate() {
   const newPrompt = question.value.trim()
   if (newPrompt == '') {
@@ -1148,18 +1168,6 @@ async function newPromptGenerate() {
     generate(chatContext)
     question.value = ''
   } catch {}
-}
-
-async function clickGenerate() {
-  let ovStatus = await backendServices.getServiceStatus('openvino-backend')
-  if (ovStatus !== 'running') {
-    emits('showWarning', 'Please ensure the openVINO service is running before using Chat.', () => {
-      globalSetup.loadingState = 'manageInstallations'
-    })
-  }
-  else {
-    newPromptGenerate()
-  }
 }
 
 async function checkModelAvailability() {

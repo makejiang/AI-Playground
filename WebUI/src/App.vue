@@ -82,6 +82,7 @@
   >
     <installation-management
       @close="concludeLoadingStateAfterManagedInstallationDialog"
+      ref="backendsCompt"
     ></installation-management>
   </main>
   <main
@@ -147,9 +148,6 @@
       <button class="tab" :class="{ active: activeTabIdx == 3 }" @click="switchTab(3)">
         {{ languages.TAB_ANSWER }}
       </button>
-      <button class="tab" :class="{ active: activeTabIdx == 4 }" @click="switchTab(4)">
-        {{ languages.TAB_LEARN_MORE }}
-      </button>
       <span class="main-tab-glider tab absolute" :class="{ [`pos-${activeTabIdx}`]: true }"></span>
     </div>
     <div class="main-content flex-auto rounded-t-lg relative">
@@ -172,11 +170,9 @@
         ref="answer"
         @show-download-model-confirm="showDownloadModelConfirm"
         @show-model-request="showModelRequest"
+        @show-backends-manager="showBackendsManager"
         @show-warning="showWarning"
       ></answer>
-      <learn-more 
-        v-show="activeTabIdx == 4"
-      ></learn-more>
       <app-settings
         v-show="showSetting"
         @close="hideAppSettings"
@@ -201,48 +197,15 @@
       ref="warningCompt"
       @close="showWarningDialog = false"
     ></warning-dialog>
-  </main>
-  <footer
+  </main>  <footer
     class="flex-none px-4 flex justify-between items-center select-none"
     :class="{
       'bg-black bg-opacity-50': theme.active === 'lnl',
       'bg-black bg-opacity-80': theme.active === 'bmg',
       'border-t border-color-spilter': theme.active === 'dark',
     }"
-  >
-    <div>
-    <!--   <p>
-        Al Playground from Intel Corporation
-        <a href="https://github.com/intel/ai-playground" target="_blank" class="text-blue-500"
-          >https://github.com/intel/ai-playground</a
-        >
-      </p>
-      <p>
-        AI Playground version: v{{ productVersion }}
-        <a
-          href="https://github.com/intel/ai-playground/blob/main/AI%20Playground%20Users%20Guide.pdf"
-          target="_blank"
-          class="text-blue-500"
-        >
-          User Guide</a
-        >
-
-        <a
-          href="https://github.com/intel/ai-playground/blob/main/notices-disclaimers.md"
-          target="_blank"
-          class="text-blue-500"
-        >
-          | Important Notices and Disclaimers</a
-        >
-
-        <a
-          href="https://github.com/intel/ai-playground/blob/main/LICENSE"
-          target="_blank"
-          class="text-blue-500"
-        >
-          | Licenses</a
-        >
-      </p>  -->
+  >    <div>
+      <backend-status @manage-backends="() => showBackendsManager(() => {})" />
     </div>
     <div v-if="theme.active === 'lnl'" class="flex gap-2 items-center">
       <p class="text-gray-300 text-lg mr-2">Support</p>
@@ -275,6 +238,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useTheme } from './assets/js/store/theme.ts'
 import AddLLMDialog from '@/components/AddLLMDialog.vue'
 import WarningDialog from '@/components/WarningDialog.vue'
+import BackendStatus from '@/components/BackendStatus.vue'
 import { useBackendServices } from './assets/js/store/backendServices.ts'
 import { ServerStackIcon } from '@heroicons/vue/24/solid'
 import { useColorMode } from '@vueuse/core'
@@ -286,6 +250,7 @@ const globalSetup = useGlobalSetup()
 
 const enhanceCompt = ref<InstanceType<typeof Enhance>>()
 const answer = ref<InstanceType<typeof Answer>>()
+const backendsCompt = ref<InstanceType<typeof InstallationManagement>>()
 const downloadDigCompt = ref<InstanceType<typeof DownloadDialog>>()
 const addLLMCompt = ref<InstanceType<typeof AddLLMDialog>>()
 const warningCompt = ref<InstanceType<typeof WarningDialog>>()
@@ -336,6 +301,7 @@ async function setInitalLoadingState() {
     setTimeout(setInitalLoadingState, 1000)
     return
   }
+
   if (backendServices.allRequiredSetUp) {
     globalSetup.loadingState = 'loading'
     // const result = await backendServices.startAllSetUpServices()
@@ -355,7 +321,13 @@ async function setInitalLoadingState() {
       else {
         globalSetup.loadingState = 'manageInstallations'
       }
+    }).catch((error) => {
+      console.error('Error starting AI backend service:', error)
+      globalSetup.loadingState = 'manageInstallations'
     })
+  }
+  else {
+    globalSetup.loadingState = 'manageInstallations'
   }
   
 }
@@ -441,7 +413,7 @@ function openDevTools() {
 
 function postImageToEnhance(imageUrl: string) {
   enhanceCompt.value?.receiveImage(imageUrl)
-  activeTabIdx.value = 1
+  activeTabIdx.value = 2
 }
 
 function showDownloadModelConfirm(
@@ -474,5 +446,10 @@ function showWarning(message: string, func: () => void) {
   nextTick(() => {
     warningCompt.value!.onShow()
   })
+}
+
+function showBackendsManager(func: () => void) {
+  globalSetup.loadingState = 'manageInstallations'
+  backendsCompt.value!.closeFunction = func
 }
 </script>
