@@ -1,7 +1,7 @@
 {
     "name": "AIGC",
     "nameCN": "AIGC助手",
-    "tags": ["智能", "办公", "学习", "生活"],
+    "tags": ["AI", "Office", "Learning", "Lifestyle"],
     "iconUrl": "logo.aigc.png",
     "homeUrl": "https://www.160.com/aigc",
     "installer": "AIGCWebSetup_b11119_1_0_0_16.exe",

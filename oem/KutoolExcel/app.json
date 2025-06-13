@@ -1,7 +1,7 @@
 {
     "name": "Kutool For Excel",
     "nameCN": "Kutools For Excel",
-    "tags": ["Office", "AI", "助手", "效率"],
+    "tags": ["Office", "AI", "Assistant", "Productivity"],
     "iconUrl": "logo.kutools.png",
     "homeUrl": "https://zh-cn.extendoffice.com",
     "installer": "KutoolsforExcelSetup.exe",

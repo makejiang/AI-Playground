@@ -1,7 +1,7 @@
 {
     "name": "Infinity",
     "nameCN": "无涯Infinity",
-    "tags": ["AI", "知识", "效率"],
+    "tags": ["AI", "Knowledge", "Efficiency"],
     "iconUrl": "logo.infinity.png",
     "homeUrl": "https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html",
     "installer": "Infinity-Setup-AIO.exe",

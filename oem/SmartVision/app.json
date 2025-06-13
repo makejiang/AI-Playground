@@ -1,7 +1,7 @@
 {
     "name": "SmartVision",
     "nameCN": "神州问学",
-    "tags": ["工作流", "AI", "业务", "低代码"],
+    "tags": ["workflow", "AI", "business", "low-code"],
     "iconUrl": "logo.szwx.png",
     "homeUrl": "https://smartvision.dcclouds.com",
     "installer": "",

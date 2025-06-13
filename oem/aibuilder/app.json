@@ -1,7 +1,7 @@
 {
     "name": "aibuilder",
     "nameCN": "Intel® AI Assistant Builder",
-    "tags": ["智能", "办公", "RAG", "助手"],
+    "tags": ["AI", "office", "RAG", "assistant"],
     "iconUrl": "logo.aibuilder.png",
     "homeUrl": "https://aibuilder.intel.com",
     "installer": "Intel.R.AI.Assistant.Builder_Installer_SA_1.2.0.517.exe",

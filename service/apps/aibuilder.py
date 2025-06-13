@@ -22,7 +22,7 @@ class app(BaseApp):
             return 'data:{"state":"not-installed", "message":"is the app installed correctly?"}\0'
 
         logger.info(f"calling cmd process: {path_exe}")
-        subprocess.Popen([path_exe], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen([path_exe], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=path_dir)
         time.sleep(1)  # give some time for the process to start
 
         return self._report_running_process(process_name)

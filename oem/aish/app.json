@@ -1,7 +1,7 @@
 {
     "name": "FlashPaint",
     "nameCN": "AI闪绘",
-    "tags": ["画图", "艺术", "AI", "想象"],
+    "tags": ["Drawing", "Art", "AI", "Creativity"],
     "iconUrl": "logo.aish.png",
     "homeUrl": "https://www.photosir.cn/#/AiFlashDrawing?type=aipc",
     "installer": "flashpaint_community_Local_1.0.1.50508.exe",

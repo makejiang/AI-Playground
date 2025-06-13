@@ -1,7 +1,7 @@
 {
     "name": "zhiwo",
     "nameCN": "知我AI",
-    "tags": ["智能", "办公", "知识", "本地"],
+    "tags": ["AI", "Office", "Knowledge", "Local"],
     "iconUrl": "logo.zhiwo.png",
     "homeUrl": "https://knowme.xiaoduoai.com",
     "installer": "zhiwoai.exe",

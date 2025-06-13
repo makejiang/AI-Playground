@@ -1,7 +1,7 @@
 {
     "name": "OfficeAI",
     "nameCN": "OfficeAI助手",
-    "tags": ["办公", "效率", "AI", "自动化"],
+    "tags": ["Office", "Productivity", "AI", "Automation"],
     "iconUrl": "logo.officeai.png",
     "homeUrl": "https://www.smfyun.com/",
     "installer": "",
