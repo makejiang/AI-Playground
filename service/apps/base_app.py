@@ -55,7 +55,7 @@ class BaseApp:
         # wait for the process to start
         count = 10
         while not winutils.appisrunning(installer):
-            time.sleep(0.3)
+            time.sleep(0.8)
             count -= 1
             if count < 0:
                 logger.error(f"'{installer}' did not start in time")
@@ -141,11 +141,11 @@ class BaseApp:
         # wait for the process to start
         count = 10
         while not winutils.appisrunning(uninstall_process_name):
-            time.sleep(0.3)
+            time.sleep(0.8)
             count -= 1
             if count < 0:
                 logger.error(f"'{uninstall_process_name}' did not start in time")
-                yield 'data:{"state":"error", "message":"Uninstallation failed, process did not start"}\0'
+                yield 'data:{"state":"installed", "message":"Uninstallation failed, process did not start"}\0'
                 return
 
         # wait for the process to finish
@@ -192,14 +192,19 @@ class BaseApp:
 
         logger.info(f"calling cmd process: {path_exe}")
         #subprocess.Popen([path_exe], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        win32api.ShellExecute(
-                    0, 
-                    "runas", 
-                    path_exe, 
-                    None, 
-                    None, 
-                    win32con.SW_SHOWNORMAL
-                )
+        try:
+            win32api.ShellExecute(
+                        0, 
+                        "runas", 
+                        path_exe, 
+                        None, 
+                        None, 
+                        win32con.SW_SHOWNORMAL
+                    )
+        except Exception as e:
+            logger.error(f"Failed to launch app: {e}")
+            return 'data:{"state":"installed", "message":"Failed to launch app"}\0'
+
         return self._report_running_process(process_name.split('\\')[-1])
 
     def _report_running_process(self, process_name: str):

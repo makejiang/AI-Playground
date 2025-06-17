@@ -1,8 +1,11 @@
 from . import winutils
-from . import normal
-from . import moyoyo
-from . import aibuilder
-from . import zhiwo
+from . import (
+    normal, 
+    moyoyo,
+    aibuilder,
+    zhiwo,
+    infinity
+)
 
 __all__ = [
     "winutils",
@@ -10,4 +13,5 @@ __all__ = [
     "moyoyo",
     "aibuilder",
     "zhiwo",
+    "infinity"
 ]

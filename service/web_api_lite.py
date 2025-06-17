@@ -504,7 +504,7 @@ isvapps = {
     'AIPPT': apps.normal.app_instance,
     'Coze': apps.normal.app_instance,
     'FlowyAI': apps.normal.app_instance,
-    'Infinity': apps.normal.app_instance,
+    'Infinity': apps.infinity.app_instance,
     'AIPCMeeting': apps.normal.app_instance,
     'FlashPaint': apps.normal.app_instance,
     'moyoyo': apps.moyoyo.app_instance,
@@ -522,7 +522,7 @@ def get_app_status():
         logging.error(f"App {app_info['name']} not found in isvapps")
         return jsonify({"status": "not-supported"})
 
-    if app_op.is_running(app_info['processname']):
+    if app_op.is_running(app_info['processname'].split('\\')[-1]):
         return jsonify({"status": "running"})
 
     if app_op.is_installed(app_info['installedname']):
