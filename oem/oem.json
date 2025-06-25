@@ -4,6 +4,6 @@
     "apps":[
         "AIPPT", "FlowyAI", "Infinity",
         "moyoyo", "RSMeet", "aish",
-        "zhiwo", "aibuilder", "KutoolExcel"
+        "aibuilder", "KutoolExcel", "KutoolWord"
     ]
 }
